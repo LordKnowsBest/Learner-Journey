@@ -18,42 +18,12 @@ export type AskTutorInput = z.infer<typeof AskTutorInputSchema>;
 
 const AskTutorOutputSchema = z.object({
   answer: z.string().describe('The AI tutor answer.'),
-  tokensUsed: z.number().describe('Number of tokens used for LLM interaction'),
 });
 export type AskTutorOutput = z.infer<typeof AskTutorOutputSchema>;
 
 export async function askTutor(input: AskTutorInput): Promise<AskTutorOutput> {
   return askTutorFlow(input);
 }
-
-const askTutorPrompt = ai.definePrompt({
-  name: 'askTutorPrompt',
-  system: `You are an AI literacy tutor for 7th-8th grade students.
-
-Current topic: {{node.title}}
-Description: {{node.description}}
-
-Rules:
-1. Use simple 7th-grade language
-2. Give real-world examples (social media, school, games)
-3. Keep answers under 100 words
-4. Stay on topic (AI Ethics only)
-5. If off-topic, redirect gently
-
-Student question: {{question}}`,
-  input: {
-    schema: z.object({
-      nodeId: z.string(),
-      question: z.string(),
-      node: z.object({
-        id: z.string(),
-        title: z.string(),
-        description: z.string(),
-      }),
-    }),
-  },
-  output: {schema: AskTutorOutputSchema},
-});
 
 const knowledgeGraphNodeTool = ai.defineTool(
   {
@@ -69,9 +39,7 @@ const knowledgeGraphNodeTool = ai.defineTool(
     }),
   },
   async (input) => {
-    // TODO: Implement the actual data retrieval logic here.
-    // This is a placeholder - replace with actual database/service call.
-    // For the sake of this example, we'll return mock data.
+    // This is a placeholder - in a real app, this would fetch from a database.
     if (input.nodeId === 'ethics_01') {
       return {
         id: 'ethics_01',
@@ -84,6 +52,24 @@ const knowledgeGraphNodeTool = ai.defineTool(
         title: 'Data Collection',
         description: 'How do apps and AI systems collect your information?',
       };
+    } else if (input.nodeId === 'ethics_03') {
+      return {
+        id: 'ethics_03',
+        title: 'Algorithmic Bias',
+        description: 'Discover how AI can sometimes make unfair decisions.',
+      };
+    } else if (input.nodeId === 'ethics_04') {
+        return {
+          id: 'ethics_04',
+          title: 'AI Decision Making',
+          description: 'Understand how AI models make predictions and decisions.',
+        };
+    } else if (input.nodeId === 'ethics_05') {
+        return {
+          id: 'ethics_05',
+          title: 'Fairness in AI',
+          description: 'Exploring what it means for AI to be fair to everyone.',
+        };
     } else if (input.nodeId === 'ethics_06') {
       return {
         id: 'ethics_06',
@@ -105,6 +91,7 @@ const knowledgeGraphNodeTool = ai.defineTool(
   }
 );
 
+
 const askTutorFlow = ai.defineFlow(
   {
     name: 'askTutorFlow',
@@ -112,20 +99,25 @@ const askTutorFlow = ai.defineFlow(
     outputSchema: AskTutorOutputSchema,
   },
   async (input) => {
-    const node = await knowledgeGraphNodeTool(input);
-    const promptInput = {...input, node};
+    
+    const { output } = await ai.generate({
+        prompt: `Student question: ${input.question}`,
+        system: `You are an AI literacy tutor for 7th-8th grade students.
 
-    const {output, usage} = await ai.generate({
-        prompt: askTutorPrompt.prompt,
-        system: askTutorPrompt.system,
-        input: promptInput,
+Your role is to help students understand concepts related to AI Ethics.
+When a student asks a question, you must decide if it is related to the current topic. To get information on the current topic, you MUST use the getKnowledgeGraphNode tool.
+
+Rules:
+1. Use simple 7th-grade language.
+2. Give real-world examples relevant to a middle schooler (social media, school, video games).
+3. Keep answers concise, ideally under 100 words.
+4. Stay on the topic of AI Ethics.
+5. If the question is off-topic, gently redirect the student back to the current topic of study. Do not answer off-topic questions.`,
+        tools: [knowledgeGraphNodeTool],
         model: 'googleai/gemini-2.5-flash',
         output: { schema: AskTutorOutputSchema }
     });
     
-    return {
-      answer: output!.answer,
-      tokensUsed: usage.totalTokens,
-    };
+    return output!;
   }
 );
