@@ -65,7 +65,7 @@ export function Quiz({ questions, onComplete, title, description }: QuizProps) {
           </div>
           <div className="space-y-4">
             {questions.map((q, i) => (
-              <Alert key={q.id || i} variant={answers[i] === q.correctAnswer ? "default" : "destructive"} className="bg-card">
+              <Alert key={'id' in q ? q.id : i} variant={answers[i] === q.correctAnswer ? "default" : "destructive"} className="bg-card">
                  {answers[i] === q.correctAnswer ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
                 <AlertTitle className="font-bold">{q.question}</AlertTitle>
                 <AlertDescription>

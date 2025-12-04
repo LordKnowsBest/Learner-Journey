@@ -1,42 +1,92 @@
 'use server';
 /**
- * @fileOverview AI-powered tutoring support for AI ethics concepts.
+ * @fileOverview Socratic AI Facilitator for Problem-Based Learning
  *
- * - askTutor - A function that handles the interaction with the AI tutor.
- * - AskTutorInput - The input type for the askTutor function.
- * - AskTutorOutput - The return type for the askTutor function.
+ * This AI acts as a guide, not an instructor. It uses Socratic questioning
+ * to help students discover insights and connect concepts to real problems.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { conceptResources, getProblemById, getConceptById } from '@/lib/data';
+import type { TutorMode } from '@/lib/types';
 
+// ============================================
+// INPUT/OUTPUT SCHEMAS
+// ============================================
+
+const SocraticTutorInputSchema = z.object({
+  problemId: z.string().describe('The current problem scenario ID'),
+  phaseId: z.string().describe('The current investigation phase ID'),
+  studentMessage: z.string().describe('The student\'s message or question'),
+  discoveredConcepts: z.array(z.string()).describe('Concepts the student has discovered'),
+  conversationHistory: z.array(z.object({
+    role: z.enum(['user', 'tutor']),
+    content: z.string(),
+  })).describe('Previous conversation messages'),
+  stuckCount: z.number().describe('How many times the student has asked for help without progress'),
+  mode: z.enum(['socratic', 'hint', 'explain', 'challenge']).optional(),
+});
+
+export type SocraticTutorInput = z.infer<typeof SocraticTutorInputSchema>;
+
+const SocraticTutorOutputSchema = z.object({
+  response: z.string().describe('The tutor\'s response'),
+  suggestedConcepts: z.array(z.string()).describe('Concepts relevant to explore'),
+  followUpQuestions: z.array(z.string()).describe('Questions to deepen thinking'),
+  mode: z.enum(['socratic', 'hint', 'explain', 'challenge']).describe('The response mode used'),
+  shouldRevealConcept: z.boolean().describe('Whether a concept should be revealed'),
+  conceptToReveal: z.string().optional().describe('The concept ID to reveal if applicable'),
+});
+
+export type SocraticTutorOutput = z.infer<typeof SocraticTutorOutputSchema>;
+
+// ============================================
+// MAIN EXPORT FUNCTION
+// ============================================
+
+export async function askSocraticTutor(input: SocraticTutorInput): Promise<SocraticTutorOutput> {
+  return socraticTutorFlow(input);
+}
+
+// Legacy support
 const AskTutorInputSchema = z.object({
   nodeId: z.string().describe('The ID of the knowledge graph node.'),
   question: z.string().describe('The student question.'),
 });
-export type AskTutorInput = z.infer<typeof AskTutorInputSchema>;
 
 const AskTutorOutputSchema = z.object({
   answer: z.string().describe('The AI tutor answer.'),
 });
+
+export type AskTutorInput = z.infer<typeof AskTutorInputSchema>;
 export type AskTutorOutput = z.infer<typeof AskTutorOutputSchema>;
 
 export async function askTutor(input: AskTutorInput): Promise<AskTutorOutput> {
-  return askTutorFlow(input);
+  // Convert legacy input to Socratic format
+  const socraticInput: SocraticTutorInput = {
+    problemId: '',
+    phaseId: '',
+    studentMessage: input.question,
+    discoveredConcepts: [],
+    conversationHistory: [],
+    stuckCount: 0,
+    mode: 'explain', // Legacy mode defaults to explain
+  };
+
+  const result = await socraticTutorFlow(socraticInput);
+
+  return {
+    answer: result.response,
+    tokensUsed: 0,
+  };
 }
 
 const knowledgeGraphNodeTool = ai.defineTool(
   {
-    name: 'getKnowledgeGraphNode',
-    description: 'Retrieves a knowledge graph node by its ID.',
-    inputSchema: z.object({
-      nodeId: z.string().describe('The ID of the knowledge graph node to retrieve.'),
-    }),
-    outputSchema: z.object({
-      id: z.string(),
-      title: z.string(),
-      description: z.string(),
-    }),
+    name: 'socraticTutorFlow',
+    inputSchema: SocraticTutorInputSchema,
+    outputSchema: SocraticTutorOutputSchema,
   },
   async (input) => {
     // This is a placeholder - in a real app, this would fetch from a database.
@@ -84,9 +134,12 @@ const knowledgeGraphNodeTool = ai.defineTool(
       };
     }
     return {
-      id: 'unknown',
-      title: 'Unknown Topic',
-      description: 'No information available for this topic.',
+      response: output?.response || "That's an interesting thought. Can you tell me more about what made you think of that?",
+      suggestedConcepts: output?.suggestedConcepts || [],
+      followUpQuestions: output?.followUpQuestions || [],
+      mode: effectiveMode,
+      shouldRevealConcept: output?.shouldRevealConcept || false,
+      conceptToReveal: output?.conceptToReveal,
     };
   }
 );
@@ -120,4 +173,124 @@ Rules:
     
     return output!;
   }
-);
+
+  const { output } = await ai.generate({
+    model: 'googleai/gemini-2.5-flash',
+    prompt: `You are explaining the AI ethics concept "${concept.title}" to a 7th-8th grader.
+
+CONCEPT: ${concept.title}
+DESCRIPTION: ${concept.description}
+KEY INSIGHTS: ${concept.keyInsights.join('; ')}
+
+${input.problemContext ? `CURRENT PROBLEM CONTEXT: ${input.problemContext}` : ''}
+${input.studentQuestion ? `STUDENT'S QUESTION: ${input.studentQuestion}` : ''}
+
+Provide:
+1. A clear, simple explanation (2-3 sentences, 7th grade reading level)
+2. A relatable real-world example (social media, school, games)
+3. How this connects to their current problem investigation
+4. A thought-provoking question to consider
+
+Keep the total response under 200 words.`,
+    output: {
+      schema: ConceptExplanationOutputSchema,
+    },
+  });
+
+  return output || {
+    explanation: concept.description,
+    realWorldExample: 'Think about how this applies to apps you use every day.',
+    connectionToCurrentProblem: 'Consider how this concept relates to the problem you\'re investigating.',
+    thinkAboutThis: concept.guidingQuestions[0] || 'What do you think about this?',
+  };
+}
+
+// ============================================
+// REFLECTION FEEDBACK FLOW
+// ============================================
+
+const ReflectionFeedbackInputSchema = z.object({
+  problemId: z.string(),
+  reflectionPromptId: z.string(),
+  studentResponse: z.string(),
+  conceptsDiscovered: z.array(z.string()),
+});
+
+const ReflectionFeedbackOutputSchema = z.object({
+  overallFeedback: z.string(),
+  strengths: z.array(z.string()),
+  areasToImprove: z.array(z.string()),
+  conceptsWellApplied: z.array(z.string()),
+  conceptsMissed: z.array(z.string()),
+  followUpQuestion: z.string(),
+  score: z.number().min(0).max(100),
+});
+
+export async function evaluateReflection(input: z.infer<typeof ReflectionFeedbackInputSchema>) {
+  const problem = getProblemById(input.problemId);
+  if (!problem) {
+    return {
+      overallFeedback: 'Unable to evaluate response.',
+      strengths: [],
+      areasToImprove: [],
+      conceptsWellApplied: [],
+      conceptsMissed: [],
+      followUpQuestion: '',
+      score: 0,
+    };
+  }
+
+  const reflectionPrompt = problem.reflectionPrompts.find(r => r.id === input.reflectionPromptId);
+  if (!reflectionPrompt) {
+    return {
+      overallFeedback: 'Reflection prompt not found.',
+      strengths: [],
+      areasToImprove: [],
+      conceptsWellApplied: [],
+      conceptsMissed: [],
+      followUpQuestion: '',
+      score: 0,
+    };
+  }
+
+  const { output } = await ai.generate({
+    model: 'googleai/gemini-2.5-flash',
+    prompt: `You are evaluating a 7th-8th grader's reflection on an AI ethics problem.
+
+PROBLEM: ${problem.title}
+${problem.scenario}
+
+REFLECTION QUESTION: ${reflectionPrompt.question}
+
+RUBRIC:
+${reflectionPrompt.rubricCriteria.map(c => `- ${c.criterion} (${c.weight}%): ${c.description}`).join('\n')}
+
+CONCEPTS THEY SHOULD DEMONSTRATE:
+${reflectionPrompt.assessesConcepts.map(id => {
+  const c = getConceptById(id);
+  return c ? `- ${c.title}: ${c.description}` : '';
+}).filter(Boolean).join('\n')}
+
+CONCEPTS THEY DISCOVERED DURING INVESTIGATION:
+${input.conceptsDiscovered.join(', ')}
+
+STUDENT'S RESPONSE:
+"${input.studentResponse}"
+
+Evaluate this response. Be encouraging but honest. Give specific, actionable feedback.
+Remember this is a middle schooler - celebrate effort and good thinking.`,
+    output: {
+      schema: ReflectionFeedbackOutputSchema,
+    },
+  });
+
+  return output || {
+    overallFeedback: 'Thank you for your thoughtful response!',
+    strengths: ['You engaged with the problem'],
+    areasToImprove: ['Consider connecting more concepts'],
+    conceptsWellApplied: [],
+    conceptsMissed: [],
+    followUpQuestion: 'What else might you consider?',
+    score: 70,
+  };
+}

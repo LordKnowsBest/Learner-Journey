@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function ConceptLearningPage() {
   const params = useParams();
   const router = useRouter();
-  const { completeNode, session } = useSession();
+  const { completeNode, legacySession } = useSession();
   const { toast } = useToast();
   
   const [node, setNode] = useState<KnowledgeNode | null>(null);
@@ -34,11 +34,11 @@ export default function ConceptLearningPage() {
   
   // Redirect if trying to access already completed node for quiz
   useEffect(() => {
-    if (session.completedNodes.includes(nodeId)) {
+    if (legacySession.completedNodes.includes(nodeId)) {
         toast({ title: "Concept Already Completed", description: "You have already completed this concept." });
         router.push('/graph');
     }
-  }, [nodeId, session.completedNodes, router, toast]);
+  }, [nodeId, legacySession.completedNodes, router, toast]);
 
   const handleQuizComplete = (score: number) => {
     if (node) {
