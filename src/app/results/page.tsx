@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, Award, Rocket, Loader2 } from 'lucide-react';
 
 export default function ResultsPage() {
-  const { session, startNewSession } = useSession();
+  const { legacySession, startNewSession } = useSession();
   const router = useRouter();
-  const { diagnosticScore, postTestScore } = session;
+  const { diagnosticScore, postTestScore } = legacySession;
 
   useEffect(() => {
     if (diagnosticScore === null || postTestScore === null) {

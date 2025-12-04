@@ -15,18 +15,18 @@ const getPostTestQuestions = () => {
 };
 
 export default function PostTestPage() {
-  const { session, submitPostTest } = useSession();
+  const { legacySession, submitPostTest } = useSession();
   const router = useRouter();
   const [questions, setQuestions] = useState<AssessmentQuestion[]>([]);
 
   useEffect(() => {
     // Redirect if diagnostic not done or no nodes completed
-    if (session.diagnosticScore === null || session.completedNodes.length === 0) {
+    if (legacySession.diagnosticScore === null || legacySession.completedNodes.length === 0) {
       router.push('/graph');
     } else {
       setQuestions(getPostTestQuestions());
     }
-  }, [session, router]);
+  }, [legacySession, router]);
 
   const handleQuizComplete = (score: number) => {
     submitPostTest(score);
