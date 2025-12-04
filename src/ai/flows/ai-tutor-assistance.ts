@@ -28,9 +28,7 @@ export async function askTutor(input: AskTutorInput): Promise<AskTutorOutput> {
 
 const askTutorPrompt = ai.definePrompt({
   name: 'askTutorPrompt',
-  input: {schema: AskTutorInputSchema},
-  output: {schema: AskTutorOutputSchema},
-  prompt: `You are an AI literacy tutor for 7th-8th grade students.
+  system: `You are an AI literacy tutor for 7th-8th grade students.
 
 Current topic: {{node.title}}
 Description: {{node.description}}
@@ -43,20 +41,34 @@ Rules:
 5. If off-topic, redirect gently
 
 Student question: {{question}}`,
+  input: {
+    schema: z.object({
+      nodeId: z.string(),
+      question: z.string(),
+      node: z.object({
+        id: z.string(),
+        title: z.string(),
+        description: z.string(),
+      }),
+    }),
+  },
+  output: {schema: AskTutorOutputSchema},
 });
 
-const knowledgeGraphNodeTool = ai.defineTool({
-  name: 'getKnowledgeGraphNode',
-  description: 'Retrieves a knowledge graph node by its ID.',
-  inputSchema: z.object({
-    nodeId: z.string().describe('The ID of the knowledge graph node to retrieve.'),
-  }),
-  outputSchema: z.object({
-    id: z.string(),
-    title: z.string(),
-    description: z.string(),
-  }),
-  async execute(input) {
+const knowledgeGraphNodeTool = ai.defineTool(
+  {
+    name: 'getKnowledgeGraphNode',
+    description: 'Retrieves a knowledge graph node by its ID.',
+    inputSchema: z.object({
+      nodeId: z.string().describe('The ID of the knowledge graph node to retrieve.'),
+    }),
+    outputSchema: z.object({
+      id: z.string(),
+      title: z.string(),
+      description: z.string(),
+    }),
+  },
+  async (input) => {
     // TODO: Implement the actual data retrieval logic here.
     // This is a placeholder - replace with actual database/service call.
     // For the sake of this example, we'll return mock data.
@@ -90,8 +102,8 @@ const knowledgeGraphNodeTool = ai.defineTool({
       title: 'Unknown Topic',
       description: 'No information available for this topic.',
     };
-  },
-});
+  }
+);
 
 const askTutorFlow = ai.defineFlow(
   {
@@ -99,14 +111,21 @@ const askTutorFlow = ai.defineFlow(
     inputSchema: AskTutorInputSchema,
     outputSchema: AskTutorOutputSchema,
   },
-  async input => {
-    const node = await knowledgeGraphNodeTool.execute({nodeId: input.nodeId});
+  async (input) => {
+    const node = await knowledgeGraphNodeTool({nodeId: input.nodeId});
     const promptInput = {...input, node};
 
-    const {output, tokens} = await askTutorPrompt(promptInput);
+    const {output, usage} = await ai.generate({
+        prompt: askTutorPrompt.prompt,
+        system: askTutorPrompt.system,
+        input: promptInput,
+        model: ai.lookupModel('googleai/gemini-2.5-flash'),
+        output: { schema: AskTutorOutputSchema }
+    });
+    
     return {
       answer: output!.answer,
-      tokensUsed: tokens
+      tokensUsed: usage.totalTokens,
     };
   }
 );
