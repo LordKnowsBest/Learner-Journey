@@ -12,8 +12,7 @@ export default function KnowledgeGraphPage() {
   const { completedNodes } = session;
 
   const nodesInOrder = [...knowledgeGraphNodes].sort((a, b) => a.order - b.order);
-  const nextNodeIndex = nodesInOrder.findIndex(node => !completedNodes.includes(node.id));
-  const nextNode = nextNodeIndex !== -1 ? nodesInOrder[nextNodeIndex] : null;
+  const nextNode = nodesInOrder.find(node => !completedNodes.includes(node.id));
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8 animate-fade-in">
@@ -24,9 +23,9 @@ export default function KnowledgeGraphPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {nodesInOrder.map(node => {
           const isCompleted = completedNodes.includes(node.id);
-          const isNext = node.id === nextNode?.id;
           const prerequisitesMet = node.prerequisites.every(prereq => completedNodes.includes(prereq));
-          const isLocked = !isCompleted && !isNext && !prerequisitesMet;
+          const isLocked = !prerequisitesMet && !isCompleted;
+          const isNext = node.id === nextNode?.id && prerequisitesMet;
 
           const NodeContent = (
             <Card
@@ -43,8 +42,11 @@ export default function KnowledgeGraphPage() {
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   ) : isNext ? (
                     <Target className="h-8 w-8 text-primary" />
-                  ) : (
+                  ) : isLocked ? (
                     <Lock className="h-8 w-8" />
+                  ) : (
+                    // Available but not next
+                    <Target className="h-8 w-8 text-muted-foreground" />
                   )}
                 </div>
                 <CardTitle className="text-lg">{node.title}</CardTitle>
