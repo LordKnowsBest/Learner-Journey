@@ -12,7 +12,12 @@ export default function KnowledgeGraphPage() {
   const { completedNodes } = session;
 
   const nodesInOrder = [...knowledgeGraphNodes].sort((a, b) => a.order - b.order);
-  const nextNode = nodesInOrder.find(node => !completedNodes.includes(node.id));
+  
+  // Find the first node in order whose prerequisites are met but which isn't completed yet.
+  const nextNode = nodesInOrder.find(node => 
+    !completedNodes.includes(node.id) && 
+    node.prerequisites.every(prereq => completedNodes.includes(prereq))
+  );
 
   return (
     <div className="container mx-auto p-4 sm:p-6 md:p-8 animate-fade-in">
@@ -24,7 +29,7 @@ export default function KnowledgeGraphPage() {
         {nodesInOrder.map(node => {
           const isCompleted = completedNodes.includes(node.id);
           const prerequisitesMet = node.prerequisites.every(prereq => completedNodes.includes(prereq));
-          const isLocked = !prerequisitesMet && !isCompleted;
+          const isLocked = !prerequisitesMet;
           const isNext = node.id === nextNode?.id && prerequisitesMet;
 
           const NodeContent = (
@@ -45,7 +50,7 @@ export default function KnowledgeGraphPage() {
                   ) : isLocked ? (
                     <Lock className="h-8 w-8" />
                   ) : (
-                    // Available but not next
+                    // Available but not the primary 'next' node
                     <Target className="h-8 w-8 text-muted-foreground" />
                   )}
                 </div>
