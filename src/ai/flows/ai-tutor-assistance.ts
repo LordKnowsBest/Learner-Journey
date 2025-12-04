@@ -112,14 +112,14 @@ const askTutorFlow = ai.defineFlow(
     outputSchema: AskTutorOutputSchema,
   },
   async (input) => {
-    const node = await knowledgeGraphNodeTool({nodeId: input.nodeId});
+    const node = await knowledgeGraphNodeTool(input);
     const promptInput = {...input, node};
 
     const {output, usage} = await ai.generate({
         prompt: askTutorPrompt.prompt,
         system: askTutorPrompt.system,
         input: promptInput,
-        model: ai.lookupModel('googleai/gemini-2.5-flash'),
+        model: 'googleai/gemini-2.5-flash',
         output: { schema: AskTutorOutputSchema }
     });
     
