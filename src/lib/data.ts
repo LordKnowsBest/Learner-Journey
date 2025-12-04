@@ -195,6 +195,102 @@ export const knowledgeGraphNodes: KnowledgeNode[] = [
     ],
     prerequisites: ["ethics_03"],
     category: "AI & Society"
+  },
+    {
+    id: "ethics_06",
+    title: "AI & Misinformation",
+    description: "Learn how AI can create and spread false information.",
+    order: 6,
+    videoUrl: "https://www.youtube.com/embed/g6kE0im3xx4",
+    videoTitle: "AI and Misinformation",
+    videoDuration: 320,
+    articleUrl: "https://www.brookings.edu/articles/ai-and-the-future-of-misinformation/",
+    articleTitle: "AI and the Future of Misinformation",
+    quiz: [
+      {
+        question: "What is a 'deepfake'?",
+        options: [
+          "A very deep thought",
+          "AI-generated video or audio that looks real but is fake",
+          "A type of AI chip",
+          "A secure password"
+        ],
+        correctAnswer: "AI-generated video or audio that looks real but is fake",
+        explanation: "Deepfakes use AI to create realistic but fabricated videos or audio clips, which can be a powerful tool for misinformation."
+      },
+      {
+        question: "How can AI help combat misinformation?",
+        options: [
+          "By creating more misinformation",
+          "By automatically fact-checking and identifying fake content",
+          "AI cannot help with this problem",
+          "By blocking all social media"
+        ],
+        correctAnswer: "By automatically fact-checking and identifying fake content",
+        explanation: "Just as AI can create fake content, it can also be trained to detect patterns in misinformation and flag it for human review or removal."
+      },
+      {
+        question: "Why is it important to be critical of information you see online?",
+        options: [
+          "It's not important",
+          "Because AI can make it easy to create convincing fake content",
+          "Because all online information is true",
+          "Only if the information is from a source you don't know"
+        ],
+        correctAnswer: "Because AI can make it easy to create convincing fake content",
+        explanation: "With the rise of AI-generated content, it's more important than ever to question sources and look for evidence before believing what you see."
+      }
+    ],
+    prerequisites: ["ethics_04"],
+    category: "Advanced Topics"
+  },
+  {
+    id: "ethics_07",
+    title: "Human-in-the-Loop",
+    description: "Why human oversight is crucial for AI systems.",
+    order: 7,
+    videoUrl: "https://www.youtube.com/embed/1-N-k6f8q1E",
+    videoTitle: "Human-in-the-Loop Machine Learning",
+    videoDuration: 290,
+    articleUrl: "https://aws.amazon.com/what-is/human-in-the-loop/",
+    articleTitle: "What is Human-in-the-Loop?",
+    quiz: [
+      {
+        question: "What does 'Human-in-the-Loop' (HITL) mean for AI?",
+        options: [
+          "Humans are replaced by AI",
+          "Humans are involved in the AI's decision-making process",
+          "AI is controlled by a joystick",
+          "AI that can talk to humans"
+        ],
+        correctAnswer: "Humans are involved in the AI's decision-making process",
+        explanation: "HITL systems leverage both human and machine intelligence. Humans are involved in training, tuning, and testing the AI model."
+      },
+      {
+        question: "In which situation would a Human-in-the-Loop system be most important?",
+        options: [
+          "Recommending a song",
+          "An AI diagnosing a medical condition",
+          "Sorting colors in an image",
+          "Playing a video game"
+        ],
+        correctAnswer: "An AI diagnosing a medical condition",
+        explanation: "In high-stakes situations like healthcare, a human (like a doctor) must be involved to verify the AI's conclusion and make the final call."
+      },
+      {
+        question: "What is a key benefit of having a human in the loop?",
+        options: [
+          "It makes the AI slower",
+          "It introduces common sense and ethical judgment into the system",
+          "It makes the system more expensive",
+          "It makes the AI less accurate"
+        ],
+        correctAnswer: "It introduces common sense and ethical judgment into the system",
+        explanation: "Humans can handle ambiguity and apply ethical considerations in ways that AI currently cannot, making the overall system safer and more reliable."
+      }
+    ],
+    prerequisites: ["ethics_04", "ethics_05"],
+    category: "Advanced Topics"
   }
 ];
 
@@ -230,7 +326,7 @@ export const assessmentQuestions: AssessmentQuestion[] = [
     correctAnswer: "It might think only men can be doctors",
     nodeId: "ethics_03",
     difficulty: "beginner",
-atype: "diagnostic"
+    atype: "diagnostic"
   },
   {
     id: "diag_04",

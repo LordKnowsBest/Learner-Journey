@@ -72,6 +72,18 @@ const knowledgeGraphNodeTool = ai.defineTool({
         title: 'Data Collection',
         description: 'How do apps and AI systems collect your information?',
       };
+    } else if (input.nodeId === 'ethics_06') {
+      return {
+        id: 'ethics_06',
+        title: 'AI & Misinformation',
+        description: 'Learn how AI can create and spread false information.',
+      };
+    } else if (input.nodeId === 'ethics_07') {
+      return {
+        id: 'ethics_07',
+        title: 'Human-in-the-Loop',
+        description: 'Why human oversight is crucial for AI systems.',
+      };
     }
     return {
       id: 'unknown',
