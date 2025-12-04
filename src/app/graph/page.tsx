@@ -26,7 +26,7 @@ export default function KnowledgeGraphPage() {
           const isCompleted = completedNodes.includes(node.id);
           const isNext = node.id === nextNode?.id;
           const prerequisitesMet = node.prerequisites.every(prereq => completedNodes.includes(prereq));
-          const isLocked = !isCompleted && !isNext;
+          const isLocked = !isCompleted && !isNext && !prerequisitesMet;
 
           const NodeContent = (
             <Card
