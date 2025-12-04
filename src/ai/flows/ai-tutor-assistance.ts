@@ -57,7 +57,6 @@ const AskTutorInputSchema = z.object({
 
 const AskTutorOutputSchema = z.object({
   answer: z.string().describe('The AI tutor answer.'),
-  tokensUsed: z.number().describe('Number of tokens used for LLM interaction'),
 });
 
 export type AskTutorInput = z.infer<typeof AskTutorInputSchema>;
@@ -83,160 +82,57 @@ export async function askTutor(input: AskTutorInput): Promise<AskTutorOutput> {
   };
 }
 
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-function buildProblemContext(problemId: string, phaseId: string): string {
-  const problem = getProblemById(problemId);
-  if (!problem) return '';
-
-  const phase = problem.phases.find(p => p.id === phaseId);
-
-  return `
-CURRENT PROBLEM: "${problem.title}"
-${problem.scenario}
-
-STAKEHOLDERS:
-${problem.stakeholders.map(s => `- ${s.name} (${s.role}): ${s.perspective}`).join('\n')}
-
-${phase ? `
-CURRENT INVESTIGATION PHASE: "${phase.title}"
-${phase.description}
-
-GUIDING PROMPT: ${phase.prompt}
-
-QUESTIONS TO CONSIDER:
-${phase.questionsToConsider.map(q => `- ${q}`).join('\n')}
-` : ''}
-`;
-}
-
-function buildConceptContext(discoveredConcepts: string[]): string {
-  if (discoveredConcepts.length === 0) return 'The student has not yet discovered any concepts.';
-
-  const discovered = discoveredConcepts
-    .map(id => getConceptById(id))
-    .filter(c => c !== undefined);
-
-  return `
-CONCEPTS DISCOVERED SO FAR:
-${discovered.map(c => `- ${c!.title}: ${c!.description}`).join('\n')}
-`;
-}
-
-function getAvailableConcepts(problemId: string, phaseId: string): string[] {
-  const problem = getProblemById(problemId);
-  if (!problem) return [];
-
-  const phase = problem.phases.find(p => p.id === phaseId);
-  return phase?.revealsConcepts || [];
-}
-
-function getModeInstructions(mode: TutorMode | undefined, stuckCount: number): string {
-  // Adaptive mode based on stuck count
-  const effectiveMode = mode || (stuckCount >= 3 ? 'explain' : stuckCount >= 1 ? 'hint' : 'socratic');
-
-  const instructions: Record<TutorMode, string> = {
-    socratic: `
-MODE: SOCRATIC QUESTIONING
-- DO NOT give direct answers
-- Ask thought-provoking questions that guide discovery
-- Help the student connect ideas to the problem
-- Encourage them to think about stakeholder perspectives
-- Use phrases like "What do you think would happen if...", "Have you considered...", "What might [stakeholder] say about..."
-`,
-    hint: `
-MODE: GENTLE HINTS
-- The student is slightly stuck, provide gentle guidance
-- Give partial information that points in the right direction
-- Suggest an angle to consider without revealing the answer
-- Reference the problem scenario to keep them grounded
-`,
-    explain: `
-MODE: SUPPORTIVE EXPLANATION
-- The student needs more direct help
-- Explain concepts clearly but still encourage thinking
-- Connect explanations back to the problem at hand
-- After explaining, ask a follow-up question to check understanding
-`,
-    challenge: `
-MODE: CHALLENGE & EXTEND
-- The student is doing well, push their thinking further
-- Play devil's advocate to strengthen their reasoning
-- Ask them to consider edge cases or alternative perspectives
-- Challenge assumptions in a constructive way
-`,
-  };
-
-  return instructions[effectiveMode];
-}
-
-// ============================================
-// SOCRATIC TUTOR FLOW
-// ============================================
-
-const socraticTutorFlow = ai.defineFlow(
+const knowledgeGraphNodeTool = ai.defineTool(
   {
     name: 'socraticTutorFlow',
     inputSchema: SocraticTutorInputSchema,
     outputSchema: SocraticTutorOutputSchema,
   },
   async (input) => {
-    const problemContext = buildProblemContext(input.problemId, input.phaseId);
-    const conceptContext = buildConceptContext(input.discoveredConcepts);
-    const modeInstructions = getModeInstructions(input.mode, input.stuckCount);
-    const availableConcepts = getAvailableConcepts(input.problemId, input.phaseId);
-
-    const conversationContext = input.conversationHistory.length > 0
-      ? `\nRECENT CONVERSATION:\n${input.conversationHistory.slice(-6).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n')}`
-      : '';
-
-    const systemPrompt = `You are a Socratic facilitator helping 7th-8th grade students learn about AI ethics through problem-based learning.
-
-YOUR ROLE:
-- Guide students to discover insights, don't lecture them
-- Connect everything back to the current problem scenario
-- Help students think critically about stakeholder perspectives
-- Celebrate good thinking and gently redirect misconceptions
-- Use simple, age-appropriate language (7th-8th grade level)
-
-${modeInstructions}
-
-IMPORTANT RULES:
-1. Keep responses under 150 words
-2. Always end with a question or prompt for further thinking (except in explain mode after direct help)
-3. Reference specific stakeholders or details from the problem
-4. If a student's thinking naturally leads to a concept, note it for revelation
-5. Never be preachy or moralistic - let students reach conclusions themselves
-
-AVAILABLE CONCEPTS FOR THIS PHASE:
-${availableConcepts.map(id => {
-  const c = getConceptById(id);
-  return c ? `- ${id}: ${c.title}` : '';
-}).filter(Boolean).join('\n')}
-
-${problemContext}
-
-${conceptContext}
-
-${conversationContext}
-
-STUDENT MESSAGE: "${input.studentMessage}"
-
-Respond as the Socratic facilitator. If the student's response demonstrates understanding of a concept, indicate it should be revealed.`;
-
-    const { output } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash',
-      prompt: systemPrompt,
-      output: {
-        schema: SocraticTutorOutputSchema,
-      },
-    });
-
-    // Determine effective mode for response
-    const effectiveMode: TutorMode = input.mode || (input.stuckCount >= 3 ? 'explain' : input.stuckCount >= 1 ? 'hint' : 'socratic');
-
+    // This is a placeholder - in a real app, this would fetch from a database.
+    if (input.nodeId === 'ethics_01') {
+      return {
+        id: 'ethics_01',
+        title: 'Privacy Basics',
+        description: 'Understanding personal data and why privacy matters',
+      };
+    } else if (input.nodeId === 'ethics_02') {
+      return {
+        id: 'ethics_02',
+        title: 'Data Collection',
+        description: 'How do apps and AI systems collect your information?',
+      };
+    } else if (input.nodeId === 'ethics_03') {
+      return {
+        id: 'ethics_03',
+        title: 'Algorithmic Bias',
+        description: 'Discover how AI can sometimes make unfair decisions.',
+      };
+    } else if (input.nodeId === 'ethics_04') {
+        return {
+          id: 'ethics_04',
+          title: 'AI Decision Making',
+          description: 'Understand how AI models make predictions and decisions.',
+        };
+    } else if (input.nodeId === 'ethics_05') {
+        return {
+          id: 'ethics_05',
+          title: 'Fairness in AI',
+          description: 'Exploring what it means for AI to be fair to everyone.',
+        };
+    } else if (input.nodeId === 'ethics_06') {
+      return {
+        id: 'ethics_06',
+        title: 'AI & Misinformation',
+        description: 'Learn how AI can create and spread false information.',
+      };
+    } else if (input.nodeId === 'ethics_07') {
+      return {
+        id: 'ethics_07',
+        title: 'Human-in-the-Loop',
+        description: 'Why human oversight is crucial for AI systems.',
+      };
+    }
     return {
       response: output?.response || "That's an interesting thought. Can you tell me more about what made you think of that?",
       suggestedConcepts: output?.suggestedConcepts || [],
@@ -248,32 +144,34 @@ Respond as the Socratic facilitator. If the student's response demonstrates unde
   }
 );
 
-// ============================================
-// CONCEPT EXPLANATION FLOW
-// ============================================
 
-const ConceptExplanationInputSchema = z.object({
-  conceptId: z.string(),
-  problemContext: z.string().optional(),
-  studentQuestion: z.string().optional(),
-});
+const askTutorFlow = ai.defineFlow(
+  {
+    name: 'askTutorFlow',
+    inputSchema: AskTutorInputSchema,
+    outputSchema: AskTutorOutputSchema,
+  },
+  async (input) => {
+    
+    const { output } = await ai.generate({
+        prompt: `Student question: ${input.question}`,
+        system: `You are an AI literacy tutor for 7th-8th grade students.
 
-const ConceptExplanationOutputSchema = z.object({
-  explanation: z.string(),
-  realWorldExample: z.string(),
-  connectionToCurrentProblem: z.string(),
-  thinkAboutThis: z.string(),
-});
+Your role is to help students understand concepts related to AI Ethics.
+When a student asks a question, you must decide if it is related to the current topic. To get information on the current topic, you MUST use the getKnowledgeGraphNode tool.
 
-export async function explainConcept(input: z.infer<typeof ConceptExplanationInputSchema>) {
-  const concept = getConceptById(input.conceptId);
-  if (!concept) {
-    return {
-      explanation: 'Concept not found.',
-      realWorldExample: '',
-      connectionToCurrentProblem: '',
-      thinkAboutThis: '',
-    };
+Rules:
+1. Use simple 7th-grade language.
+2. Give real-world examples relevant to a middle schooler (social media, school, video games).
+3. Keep answers concise, ideally under 100 words.
+4. Stay on the topic of AI Ethics.
+5. If the question is off-topic, gently redirect the student back to the current topic of study. Do not answer off-topic questions.`,
+        tools: [knowledgeGraphNodeTool],
+        model: 'googleai/gemini-2.5-flash',
+        output: { schema: AskTutorOutputSchema }
+    });
+    
+    return output!;
   }
 
   const { output } = await ai.generate({
