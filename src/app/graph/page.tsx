@@ -60,8 +60,8 @@ export default function KnowledgeGraphPage() {
           }
 
           return (
-            <Link key={node.id} href={`/learn/${node.id}`} passHref>
-              <a className="h-full block">{NodeContent}</a>
+            <Link key={node.id} href={`/learn/${node.id}`} className="h-full block">
+              {NodeContent}
             </Link>
           );
         })}
