@@ -214,3 +214,73 @@ export type SessionState = {
   postTestScore: number | null;
   completedNodes: string[];
 };
+
+// ---------- Explainability Types (Stakeholder Trust) ----------
+
+export type ExplainabilityEventType =
+  | 'tutor_response'
+  | 'mode_change'
+  | 'concept_revealed'
+  | 'phase_transition'
+  | 'mastery_update'
+  | 'path_adaptation'
+  | 'hint_triggered'
+  | 'reflection_feedback';
+
+export type ExplainabilityEntry = {
+  id: string;
+  timestamp: Date;
+  eventType: ExplainabilityEventType;
+  title: string;
+  explanation: string;
+  reasoning: string;
+  // What factors influenced this decision
+  factors: {
+    factor: string;
+    value: string;
+    impact: 'positive' | 'negative' | 'neutral';
+  }[];
+  // Related data
+  relatedConcepts?: string[];
+  relatedPhase?: string;
+  studentState?: {
+    stuckCount?: number;
+    discoveredConceptsCount?: number;
+    currentMastery?: Record<string, number>;
+    timeInPhase?: number;
+  };
+  // AI-specific info
+  aiDecision?: {
+    mode?: TutorMode;
+    confidence?: number;
+    alternativesConsidered?: string[];
+  };
+};
+
+export type LearningPathExplanation = {
+  currentPath: {
+    problemId: string;
+    phaseId: string;
+    suggestedConcepts: string[];
+  };
+  reasoning: string;
+  adaptations: {
+    trigger: string;
+    change: string;
+    benefit: string;
+  }[];
+  studentProfile: {
+    strengths: string[];
+    areasForGrowth: string[];
+    learningPace: 'fast' | 'moderate' | 'careful';
+    preferredMode: TutorMode;
+  };
+};
+
+export type ExplainabilityState = {
+  entries: ExplainabilityEntry[];
+  currentPathExplanation: LearningPathExplanation | null;
+  isVisible: boolean;
+  // Stakeholder access levels
+  viewerRole: 'student' | 'parent' | 'teacher' | 'admin';
+};

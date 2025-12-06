@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { askSocraticTutor } from "@/ai/flows/ai-tutor-assistance";
+import { useExplainabilityOptional } from "@/context/ExplainabilityContext";
 import type { TutorMode } from "@/lib/types";
 import { Send, Bot, User, Lightbulb, HelpCircle, BookOpen, Zap } from "lucide-react";
 
@@ -31,6 +32,9 @@ export function SocraticChat({
   discoveredConcepts,
   onConceptDiscover,
 }: SocraticChatProps) {
+  // Optional explainability context - may not be available in all contexts
+  const explainability = useExplainabilityOptional();
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "tutor",
@@ -136,6 +140,23 @@ export function SocraticChat({
       };
 
       setMessages((prev) => [...prev, tutorMessage]);
+
+      // Log to explainability if available
+      if (explainability && response.explainability) {
+        explainability.logTutorResponse({
+          mode: response.mode,
+          reasoning: response.explainability.reasoning,
+          pedagogicalIntent: response.explainability.pedagogicalIntent,
+          factors: response.explainability.adaptationFactors.map(f => ({
+            factor: f.factor,
+            value: f.observation,
+            impact: f.influence.toLowerCase().includes('increase') ? 'positive' as const :
+                    f.influence.toLowerCase().includes('maintain') ? 'neutral' as const : 'neutral' as const,
+          })),
+          relatedConcepts: response.suggestedConcepts,
+          confidence: response.explainability.confidenceLevel,
+        });
+      }
 
       // Handle concept revelation
       if (response.shouldRevealConcept && response.conceptToReveal) {

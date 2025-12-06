@@ -10,8 +10,10 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { getProblemById, getConceptById } from "@/lib/data";
 import { useSession } from "@/context/SessionContext";
+import { useExplainability } from "@/context/ExplainabilityContext";
 import { SocraticChat } from "@/components/socratic-chat";
 import { ConceptCard } from "@/components/concept-card";
+import { ExplainabilitySidebar, ExplainabilityToggle } from "@/components/explainability-sidebar";
 import {
   Users,
   ChevronRight,
@@ -39,6 +41,13 @@ export default function InvestigatePage() {
     updateInvestigationNotes,
     isConceptDiscovered,
   } = useSession();
+
+  const {
+    logConceptRevealed,
+    logPhaseTransition,
+    logMasteryUpdate,
+    updatePathExplanation,
+  } = useExplainability();
 
   const [problem, setProblem] = useState<ProblemScenario | null>(null);
   const [activeTab, setActiveTab] = useState("scenario");
@@ -77,13 +86,35 @@ export default function InvestigatePage() {
   const progressPercent = (completedPhasesCount / problem.phases.length) * 100;
 
   const handlePhaseComplete = () => {
-    if (currentPhaseId) {
+    if (currentPhaseId && currentPhase && problem) {
       // Discover concepts from this phase
-      currentPhase?.revealsConcepts.forEach((conceptId) => {
+      currentPhase.revealsConcepts.forEach((conceptId) => {
         if (!isConceptDiscovered(conceptId)) {
+          const concept = getConceptById(conceptId);
           discoverConcept(conceptId, currentPhaseId);
+
+          // Log to explainability
+          logConceptRevealed({
+            conceptId,
+            conceptTitle: concept?.title || conceptId,
+            phaseId: currentPhaseId,
+            reason: `Concept was revealed as part of completing the "${currentPhase.title}" phase.`,
+          });
         }
       });
+
+      // Find next phase
+      const currentIndex = problem.phases.findIndex(p => p.id === currentPhaseId);
+      const nextPhase = problem.phases[currentIndex + 1];
+
+      // Log phase transition
+      logPhaseTransition({
+        fromPhase: currentPhase.title,
+        toPhase: nextPhase?.title || 'Reflection',
+        conceptsDiscovered: currentProgress?.discoveredConcepts.length || 0,
+        reason: `Student completed all activities in "${currentPhase.title}" and is ready to ${nextPhase ? 'explore the next phase' : 'reflect on their learning'}.`,
+      });
+
       completePhase(currentPhaseId);
     }
   };
@@ -95,7 +126,16 @@ export default function InvestigatePage() {
 
   const handleConceptDiscover = (conceptId: string) => {
     if (currentPhaseId && !isConceptDiscovered(conceptId)) {
+      const concept = getConceptById(conceptId);
       discoverConcept(conceptId, currentPhaseId);
+
+      // Log to explainability
+      logConceptRevealed({
+        conceptId,
+        conceptTitle: concept?.title || conceptId,
+        phaseId: currentPhaseId,
+        reason: 'Student actively discovered this concept through their investigation and discussion.',
+      });
     }
   };
 
@@ -118,12 +158,16 @@ export default function InvestigatePage() {
             <h1 className="text-2xl font-bold">{problem.title}</h1>
             <p className="text-muted-foreground">{problem.hook}</p>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Progress</p>
-            <Progress value={progressPercent} className="w-32 mt-1" />
-            <p className="text-xs text-muted-foreground mt-1">
-              {completedPhasesCount} / {problem.phases.length} phases
-            </p>
+          <div className="flex items-start gap-4">
+            {/* AI Transparency Toggle */}
+            <ExplainabilityToggle />
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Progress</p>
+              <Progress value={progressPercent} className="w-32 mt-1" />
+              <p className="text-xs text-muted-foreground mt-1">
+                {completedPhasesCount} / {problem.phases.length} phases
+              </p>
+            </div>
           </div>
         </div>
 
@@ -466,6 +510,9 @@ export default function InvestigatePage() {
           </div>
         </div>
       </div>
+
+      {/* Explainability Sidebar for Stakeholder Trust */}
+      <ExplainabilitySidebar />
     </div>
   );
 }

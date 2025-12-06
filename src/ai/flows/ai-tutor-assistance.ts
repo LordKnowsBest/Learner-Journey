@@ -37,6 +37,18 @@ const SocraticTutorOutputSchema = z.object({
   mode: z.enum(['socratic', 'hint', 'explain', 'challenge']).describe('The response mode used'),
   shouldRevealConcept: z.boolean().describe('Whether a concept should be revealed'),
   conceptToReveal: z.string().optional().describe('The concept ID to reveal if applicable'),
+  // Explainability fields for stakeholder trust
+  explainability: z.object({
+    reasoning: z.string().describe('Why the AI chose this response approach'),
+    pedagogicalIntent: z.string().describe('The learning goal this response supports'),
+    adaptationFactors: z.array(z.object({
+      factor: z.string(),
+      observation: z.string(),
+      influence: z.string(),
+    })).describe('What student signals influenced this response'),
+    alternativeApproaches: z.array(z.string()).describe('Other approaches considered'),
+    confidenceLevel: z.enum(['high', 'medium', 'low']).describe('AI confidence in this approach'),
+  }).optional(),
 });
 
 export type SocraticTutorOutput = z.infer<typeof SocraticTutorOutputSchema>;
@@ -73,6 +85,16 @@ const socraticTutorFlow = ai.defineFlow(
       .map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content}`)
       .join('\n');
 
+    // Build context for explainability
+    const stuckStatus = input.stuckCount >= 3 ? 'significantly stuck' :
+                        input.stuckCount >= 2 ? 'somewhat stuck' :
+                        input.stuckCount >= 1 ? 'slightly stuck' : 'progressing well';
+
+    const modeReason = input.mode ? `Teacher requested ${input.mode} mode` :
+                       input.stuckCount >= 3 ? `Student appears stuck (${input.stuckCount} help requests), switching to explain mode` :
+                       input.stuckCount >= 2 ? `Student needs more guidance (${input.stuckCount} help requests), using hint mode` :
+                       'Default Socratic questioning to encourage discovery';
+
     const { output } = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
       prompt: `You are a Socratic tutor helping a 7th-8th grade student investigate an AI ethics problem.
@@ -82,6 +104,7 @@ ${problem?.scenario || ''}
 
 CURRENT PHASE: ${input.phaseId}
 DISCOVERED CONCEPTS: ${input.discoveredConcepts.join(', ') || 'None yet'}
+STUDENT STATUS: ${stuckStatus} (${input.stuckCount} help requests)
 
 CONVERSATION SO FAR:
 ${conversationContext}
@@ -89,22 +112,62 @@ ${conversationContext}
 STUDENT'S MESSAGE: ${input.studentMessage}
 
 MODE: ${effectiveMode}
+MODE REASON: ${modeReason}
 INSTRUCTION: ${modeInstructions[effectiveMode]}
 
 Respond appropriately for a middle schooler. Keep responses under 150 words.
-If the student demonstrates understanding of a concept, suggest revealing it.`,
+If the student demonstrates understanding of a concept, suggest revealing it.
+
+IMPORTANT: Also provide explainability information for parents/teachers:
+- reasoning: Why you chose this response approach
+- pedagogicalIntent: What learning goal this supports
+- adaptationFactors: What about the student's message/state influenced you
+- alternativeApproaches: Other approaches you considered
+- confidenceLevel: How confident you are this is the right approach`,
       output: {
         schema: SocraticTutorOutputSchema,
       },
     });
 
-    return output || {
+    // Provide default explainability if AI didn't return it
+    const defaultExplainability = {
+      reasoning: modeReason,
+      pedagogicalIntent: effectiveMode === 'socratic'
+        ? 'Encourage independent discovery through guided questioning'
+        : effectiveMode === 'hint'
+        ? 'Provide scaffolding while maintaining student agency'
+        : effectiveMode === 'explain'
+        ? 'Build foundational understanding before resuming discovery'
+        : 'Deepen critical thinking through challenging questions',
+      adaptationFactors: [
+        {
+          factor: 'Help Request Count',
+          observation: `Student has requested help ${input.stuckCount} times`,
+          influence: input.stuckCount >= 2 ? 'Increased scaffolding' : 'Maintained Socratic approach',
+        },
+        {
+          factor: 'Concept Progress',
+          observation: `${input.discoveredConcepts.length} concepts discovered`,
+          influence: input.discoveredConcepts.length > 0 ? 'Building on prior knowledge' : 'Starting from foundations',
+        },
+      ],
+      alternativeApproaches: effectiveMode === 'socratic'
+        ? ['Direct explanation', 'Providing a hint']
+        : ['Pure Socratic questioning', 'Challenge mode'],
+      confidenceLevel: 'medium' as const,
+    };
+
+    return output ? {
+      ...output,
+      explainability: output.explainability || defaultExplainability,
+    } : {
       response: "That's an interesting thought. Can you tell me more about what made you think of that?",
       suggestedConcepts: [],
       followUpQuestions: [],
       mode: effectiveMode,
       shouldRevealConcept: false,
       conceptToReveal: undefined,
+      explainability: defaultExplainability,
     };
   }
 );
