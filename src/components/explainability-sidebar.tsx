@@ -48,9 +48,36 @@ import {
   AlertCircle,
   Info,
   X,
+  HelpCircle,
 } from 'lucide-react';
 import type { ExplainabilityEntry, ExplainabilityEventType } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
+
+// Tooltip definitions for explaining UI elements to users
+const tooltipDefinitions = {
+  // Event types
+  tutor_response: 'The AI generated a response to guide your learning. Click to see why it chose this approach.',
+  mode_change: 'The AI adjusted its teaching style based on your progress and needs.',
+  concept_revealed: 'You discovered a new AI ethics concept through your investigation.',
+  phase_transition: 'You completed a learning phase and moved to the next stage.',
+  mastery_update: 'Your understanding of a concept has improved based on your responses.',
+  path_adaptation: 'The AI personalized your learning path based on your performance.',
+  hint_triggered: 'The AI provided a hint to help you progress when you seemed stuck.',
+  reflection_feedback: 'The AI provided feedback on your reflection or solution.',
+
+  // UI elements
+  activityLog: 'View a chronological record of all AI decisions and actions during your learning session.',
+  learningPath: 'See how the AI is personalizing your learning journey based on your progress.',
+  viewerRole: 'Switch between different perspectives to see information relevant to students, parents, teachers, or administrators.',
+  confidenceBadge: 'Shows how certain the AI is about this decision. Higher confidence means the AI has more evidence to support this choice.',
+  modeBadge: 'The teaching mode the AI used: Questioning (asks you to think), Hinting (gives clues), Explaining (teaches directly), or Challenging (pushes deeper).',
+  factorImpact: 'How this factor influenced the AI\'s decision: positive (+) encouraged, negative (-) discouraged, or neutral (○) no effect.',
+  reasoning: 'The AI\'s explanation for why it made this particular decision.',
+  whatHappened: 'A simple description of the action the AI took.',
+  relatedConcepts: 'AI ethics concepts that are connected to this learning moment.',
+  studentProfile: 'A summary of your learning preferences and patterns that the AI has observed.',
+  pathAdaptations: 'Changes the AI has made to your learning journey to better suit your needs.',
+};
 
 const eventTypeConfig: Record<ExplainabilityEventType, {
   icon: typeof Brain;
@@ -73,101 +100,172 @@ function ExplainabilityEntryCard({ entry }: { entry: ExplainabilityEntry }) {
   const Icon = config.icon;
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="w-full">
-        <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left">
-          <div className={`p-2 rounded-full ${config.color} text-white flex-shrink-0`}>
-            <Icon className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-medium text-sm truncate">{entry.title}</p>
-              {isOpen ? (
-                <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {formatDistanceToNow(entry.timestamp, { addSuffix: true })}
-            </p>
-          </div>
-        </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="pl-12 pr-3 pb-3 space-y-3">
-          {/* Explanation */}
-          <div className="p-3 bg-muted/30 rounded-lg">
-            <p className="text-sm font-medium mb-1">What happened:</p>
-            <p className="text-sm text-muted-foreground">{entry.explanation}</p>
-          </div>
-
-          {/* Reasoning */}
-          <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-            <p className="text-sm font-medium mb-1 flex items-center gap-1">
-              <Brain className="w-4 h-4" />
-              Why this approach:
-            </p>
-            <p className="text-sm text-muted-foreground">{entry.reasoning}</p>
-          </div>
-
-          {/* Factors */}
-          {entry.factors.length > 0 && (
-            <div>
-              <p className="text-sm font-medium mb-2">Factors considered:</p>
-              <div className="space-y-1">
-                {entry.factors.map((factor, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-2 rounded bg-muted/30 text-sm"
-                  >
-                    <span className="font-medium">{factor.factor}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">{factor.value}</span>
-                      <Badge
-                        variant={factor.impact === 'positive' ? 'default' :
-                                factor.impact === 'negative' ? 'destructive' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {factor.impact === 'positive' ? '+' :
-                         factor.impact === 'negative' ? '-' : '○'}
-                      </Badge>
-                    </div>
+    <TooltipProvider delayDuration={300}>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <CollapsibleTrigger className="w-full">
+              <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left">
+                <div className={`p-2 rounded-full ${config.color} text-white flex-shrink-0`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm truncate">{entry.title}</p>
+                    {isOpen ? (
+                      <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    )}
                   </div>
-                ))}
+                  <p className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(entry.timestamp, { addSuffix: true })}
+                  </p>
+                </div>
               </div>
+            </CollapsibleTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="max-w-xs">
+            <p>{tooltipDefinitions[entry.eventType]}</p>
+          </TooltipContent>
+        </Tooltip>
+        <CollapsibleContent>
+          <div className="pl-12 pr-3 pb-3 space-y-3">
+            {/* Explanation */}
+            <div className="p-3 bg-muted/30 rounded-lg">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-sm font-medium mb-1 flex items-center gap-1 cursor-help">
+                    What happened:
+                    <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tooltipDefinitions.whatHappened}</p>
+                </TooltipContent>
+              </Tooltip>
+              <p className="text-sm text-muted-foreground">{entry.explanation}</p>
             </div>
-          )}
 
-          {/* AI Decision Info */}
-          {entry.aiDecision && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {entry.aiDecision.mode && (
-                <Badge variant="outline" className="text-xs">
-                  Mode: {entry.aiDecision.mode}
-                </Badge>
-              )}
-              {entry.aiDecision.confidence !== undefined && (
-                <Badge variant="outline" className="text-xs">
-                  Confidence: {Math.round(entry.aiDecision.confidence * 100)}%
-                </Badge>
-              )}
+            {/* Reasoning */}
+            <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-sm font-medium mb-1 flex items-center gap-1 cursor-help">
+                    <Brain className="w-4 h-4" />
+                    Why this approach:
+                    <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tooltipDefinitions.reasoning}</p>
+                </TooltipContent>
+              </Tooltip>
+              <p className="text-sm text-muted-foreground">{entry.reasoning}</p>
             </div>
-          )}
 
-          {/* Related Concepts */}
-          {entry.relatedConcepts && entry.relatedConcepts.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {entry.relatedConcepts.map(concept => (
-                <Badge key={concept} variant="secondary" className="text-xs">
-                  {concept.replace(/_/g, ' ')}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+            {/* Factors */}
+            {entry.factors.length > 0 && (
+              <div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-sm font-medium mb-2 flex items-center gap-1 cursor-help">
+                      Factors considered:
+                      <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>These are the inputs the AI used to make its decision. Each factor shows what was observed and how it influenced the outcome.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="space-y-1">
+                  {entry.factors.map((factor, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2 rounded bg-muted/30 text-sm"
+                    >
+                      <span className="font-medium">{factor.factor}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">{factor.value}</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              variant={factor.impact === 'positive' ? 'default' :
+                                      factor.impact === 'negative' ? 'destructive' : 'secondary'}
+                              className="text-xs cursor-help"
+                            >
+                              {factor.impact === 'positive' ? '+' :
+                               factor.impact === 'negative' ? '-' : '○'}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{tooltipDefinitions.factorImpact}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* AI Decision Info */}
+            {entry.aiDecision && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {entry.aiDecision.mode && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-xs cursor-help">
+                        Mode: {entry.aiDecision.mode}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>{tooltipDefinitions.modeBadge}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                {entry.aiDecision.confidence !== undefined && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-xs cursor-help">
+                        Confidence: {Math.round(entry.aiDecision.confidence * 100)}%
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>{tooltipDefinitions.confidenceBadge}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            )}
+
+            {/* Related Concepts */}
+            {entry.relatedConcepts && entry.relatedConcepts.length > 0 && (
+              <div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1 cursor-help">
+                      Related concepts:
+                      <HelpCircle className="w-3 h-3" />
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{tooltipDefinitions.relatedConcepts}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex flex-wrap gap-1">
+                  {entry.relatedConcepts.map(concept => (
+                    <Badge key={concept} variant="secondary" className="text-xs">
+                      {concept.replace(/_/g, ' ')}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </TooltipProvider>
   );
 }
 
@@ -180,76 +278,156 @@ function LearningPathSection() {
       <div className="p-4 text-center text-sm text-muted-foreground">
         <Target className="w-8 h-8 mx-auto mb-2 opacity-50" />
         <p>Learning path explanation will appear as you progress.</p>
+        <p className="text-xs mt-2">Start investigating a problem to see how the AI adapts to your learning style.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 p-4">
-      {/* Current Path */}
-      <div>
-        <h4 className="font-semibold text-sm mb-2">Current Learning Path</h4>
-        <div className="p-3 bg-muted/30 rounded-lg text-sm">
-          <p className="text-muted-foreground">{pathExplanation.reasoning}</p>
-        </div>
-      </div>
-
-      {/* Student Profile */}
-      <div>
-        <h4 className="font-semibold text-sm mb-2">Student Learning Profile</h4>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Learning Pace</span>
-            <Badge variant="outline">{pathExplanation.studentProfile.learningPace}</Badge>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Preferred Mode</span>
-            <Badge variant="outline">{pathExplanation.studentProfile.preferredMode}</Badge>
-          </div>
-          {pathExplanation.studentProfile.strengths.length > 0 && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Strengths:</p>
-              <div className="flex flex-wrap gap-1">
-                {pathExplanation.studentProfile.strengths.map((s, i) => (
-                  <Badge key={i} variant="secondary" className="text-xs bg-green-500/10 text-green-700">
-                    {s}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-          {pathExplanation.studentProfile.areasForGrowth.length > 0 && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Areas for Growth:</p>
-              <div className="flex flex-wrap gap-1">
-                {pathExplanation.studentProfile.areasForGrowth.map((a, i) => (
-                  <Badge key={i} variant="secondary" className="text-xs bg-orange-500/10 text-orange-700">
-                    {a}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Adaptations */}
-      {pathExplanation.adaptations.length > 0 && (
+    <TooltipProvider delayDuration={300}>
+      <div className="space-y-4 p-4">
+        {/* Current Path */}
         <div>
-          <h4 className="font-semibold text-sm mb-2">Path Adaptations</h4>
-          <div className="space-y-2">
-            {pathExplanation.adaptations.map((adaptation, i) => (
-              <div key={i} className="p-2 bg-muted/30 rounded text-sm">
-                <p className="font-medium">{adaptation.change}</p>
-                <p className="text-xs text-muted-foreground">
-                  Trigger: {adaptation.trigger} | Benefit: {adaptation.benefit}
-                </p>
-              </div>
-            ))}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-1 cursor-help">
+                Current Learning Path
+                <HelpCircle className="w-3 h-3 text-muted-foreground" />
+              </h4>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p>This explains why the AI has organized your learning in this particular way, based on the concepts you need to master.</p>
+            </TooltipContent>
+          </Tooltip>
+          <div className="p-3 bg-muted/30 rounded-lg text-sm">
+            <p className="text-muted-foreground">{pathExplanation.reasoning}</p>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Student Profile */}
+        <div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-1 cursor-help">
+                Student Learning Profile
+                <HelpCircle className="w-3 h-3 text-muted-foreground" />
+              </h4>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p>{tooltipDefinitions.studentProfile}</p>
+            </TooltipContent>
+          </Tooltip>
+          <div className="space-y-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center justify-between text-sm cursor-help">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    Learning Pace
+                    <HelpCircle className="w-3 h-3" />
+                  </span>
+                  <Badge variant="outline">{pathExplanation.studentProfile.learningPace}</Badge>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>How quickly you tend to move through concepts. The AI adjusts content complexity accordingly.</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center justify-between text-sm cursor-help">
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    Preferred Mode
+                    <HelpCircle className="w-3 h-3" />
+                  </span>
+                  <Badge variant="outline">{pathExplanation.studentProfile.preferredMode}</Badge>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Your preferred way of learning: questioning (discovery), hints (guided), explain (direct), or challenge (advanced).</p>
+              </TooltipContent>
+            </Tooltip>
+            {pathExplanation.studentProfile.strengths.length > 0 && (
+              <div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1 cursor-help">
+                      Strengths:
+                      <HelpCircle className="w-3 h-3" />
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Areas where you've shown strong understanding. The AI may build on these when introducing new concepts.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex flex-wrap gap-1">
+                  {pathExplanation.studentProfile.strengths.map((s, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs bg-green-500/10 text-green-700">
+                      {s}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            {pathExplanation.studentProfile.areasForGrowth.length > 0 && (
+              <div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1 cursor-help">
+                      Areas for Growth:
+                      <HelpCircle className="w-3 h-3" />
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Topics where additional practice would help. The AI will provide extra support in these areas.</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div className="flex flex-wrap gap-1">
+                  {pathExplanation.studentProfile.areasForGrowth.map((a, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs bg-orange-500/10 text-orange-700">
+                      {a}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Adaptations */}
+        {pathExplanation.adaptations.length > 0 && (
+          <div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-1 cursor-help">
+                  Path Adaptations
+                  <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                </h4>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>{tooltipDefinitions.pathAdaptations}</p>
+              </TooltipContent>
+            </Tooltip>
+            <div className="space-y-2">
+              {pathExplanation.adaptations.map((adaptation, i) => (
+                <Tooltip key={i}>
+                  <TooltipTrigger asChild>
+                    <div className="p-2 bg-muted/30 rounded text-sm cursor-help">
+                      <p className="font-medium">{adaptation.change}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Trigger: {adaptation.trigger} | Benefit: {adaptation.benefit}
+                      </p>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>The AI made this change to your learning path because: {adaptation.trigger}. Expected benefit: {adaptation.benefit}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -284,62 +462,102 @@ export function ExplainabilitySidebar({ className }: ExplainabilitySidebarProps)
         </TooltipProvider>
       </SheetTrigger>
       <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
-        <SheetHeader className="p-4 pb-2 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-full bg-primary/10">
-                <Brain className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <SheetTitle className="text-lg">AI Transparency</SheetTitle>
-                <SheetDescription className="text-xs">
-                  Understanding how the AI supports learning
-                </SheetDescription>
+        <TooltipProvider delayDuration={300}>
+          <SheetHeader className="p-4 pb-2 border-b">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="p-2 rounded-full bg-primary/10 cursor-help">
+                      <Brain className="w-5 h-5 text-primary" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>AI Transparency Panel - See how the AI makes decisions to support your learning</p>
+                  </TooltipContent>
+                </Tooltip>
+                <div>
+                  <SheetTitle className="text-lg">AI Transparency</SheetTitle>
+                  <SheetDescription className="text-xs">
+                    Understanding how the AI supports learning
+                  </SheetDescription>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Role Selector */}
-          <div className="flex items-center gap-2 mt-3">
-            <Users className="w-4 h-4 text-muted-foreground" />
-            <Select
-              value={state.viewerRole}
-              onValueChange={(v) => setViewerRole(v as typeof state.viewerRole)}
-            >
-              <SelectTrigger className="h-8 text-xs w-auto">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="student">Student View</SelectItem>
-                <SelectItem value="parent">Parent View</SelectItem>
-                <SelectItem value="teacher">Teacher View</SelectItem>
-                <SelectItem value="admin">Admin View</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            {/* Role Selector */}
+            <div className="flex items-center gap-2 mt-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2 cursor-help">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p>{tooltipDefinitions.viewerRole}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Select
+                value={state.viewerRole}
+                onValueChange={(v) => setViewerRole(v as typeof state.viewerRole)}
+              >
+                <SelectTrigger className="h-8 text-xs w-auto">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="student">
+                    <span className="flex items-center gap-2">Student View</span>
+                  </SelectItem>
+                  <SelectItem value="parent">
+                    <span className="flex items-center gap-2">Parent View</span>
+                  </SelectItem>
+                  <SelectItem value="teacher">
+                    <span className="flex items-center gap-2">Teacher View</span>
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    <span className="flex items-center gap-2">Admin View</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Tab Buttons */}
-          <div className="flex gap-2 mt-3">
-            <Button
-              variant={activeTab === 'activity' ? 'default' : 'outline'}
-              size="sm"
-              className="flex-1"
-              onClick={() => setActiveTab('activity')}
-            >
-              <Clock className="w-4 h-4 mr-1" />
-              Activity Log
-            </Button>
-            <Button
-              variant={activeTab === 'path' ? 'default' : 'outline'}
-              size="sm"
-              className="flex-1"
-              onClick={() => setActiveTab('path')}
-            >
-              <Target className="w-4 h-4 mr-1" />
-              Learning Path
-            </Button>
-          </div>
-        </SheetHeader>
+            {/* Tab Buttons */}
+            <div className="flex gap-2 mt-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={activeTab === 'activity' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setActiveTab('activity')}
+                  >
+                    <Clock className="w-4 h-4 mr-1" />
+                    Activity Log
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tooltipDefinitions.activityLog}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={activeTab === 'path' ? 'default' : 'outline'}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setActiveTab('path')}
+                  >
+                    <Target className="w-4 h-4 mr-1" />
+                    Learning Path
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tooltipDefinitions.learningPath}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </SheetHeader>
 
         <ScrollArea className="flex-1">
           {activeTab === 'activity' ? (
@@ -367,19 +585,35 @@ export function ExplainabilitySidebar({ className }: ExplainabilitySidebarProps)
 
         {/* Footer */}
         <div className="p-3 border-t bg-muted/30">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Info className="w-3 h-3" />
-            <span>
-              {state.viewerRole === 'student'
-                ? 'See how the AI is helping you learn'
-                : state.viewerRole === 'parent'
-                ? "Monitor your child's learning support"
-                : state.viewerRole === 'teacher'
-                ? 'Review AI tutoring decisions'
-                : 'Full system transparency'}
-            </span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground cursor-help">
+                <Info className="w-3 h-3" />
+                <span>
+                  {state.viewerRole === 'student'
+                    ? 'See how the AI is helping you learn'
+                    : state.viewerRole === 'parent'
+                    ? "Monitor your child's learning support"
+                    : state.viewerRole === 'teacher'
+                    ? 'Review AI tutoring decisions'
+                    : 'Full system transparency'}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p>
+                {state.viewerRole === 'student'
+                  ? 'This panel helps you understand how the AI tutor is personalizing your learning experience.'
+                  : state.viewerRole === 'parent'
+                  ? 'Review how the AI is supporting your child\'s learning journey and the decisions it makes.'
+                  : state.viewerRole === 'teacher'
+                  ? 'Analyze the AI\'s pedagogical decisions and how it adapts to student needs.'
+                  : 'Full access to all AI decision data, reasoning, and system-level analytics.'}
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </div>
+        </TooltipProvider>
       </SheetContent>
     </Sheet>
   );
@@ -390,7 +624,7 @@ export function ExplainabilityToggle({ className }: { className?: string }) {
   const { state, toggleSidebar } = useExplainability();
 
   return (
-    <TooltipProvider>
+    <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -403,8 +637,9 @@ export function ExplainabilityToggle({ className }: { className?: string }) {
             <span className="hidden sm:inline">AI Transparency</span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent>
-          <p>Toggle AI explainability sidebar</p>
+        <TooltipContent className="max-w-xs">
+          <p className="font-medium">AI Transparency Panel</p>
+          <p className="text-xs mt-1">View how the AI makes decisions to personalize your learning. See reasoning, confidence levels, and learning path adaptations.</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
