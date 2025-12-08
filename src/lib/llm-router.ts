@@ -172,55 +172,67 @@ export class LLMRouter {
    * Call OpenAI API
    */
   private async callOpenAI(request: LLMRequest, config: any): Promise<LLMResponse> {
-    const { default: OpenAI } = await import('openai');
-    const openai = new OpenAI({ apiKey: config.apiKey });
+    try {
+      const { default: OpenAI } = await import('openai');
+      const openai = new OpenAI({ apiKey: config.apiKey });
 
-    const messages: any[] = [];
-    if (request.systemPrompt) {
-      messages.push({ role: 'system', content: request.systemPrompt });
+      const messages: any[] = [];
+      if (request.systemPrompt) {
+        messages.push({ role: 'system', content: request.systemPrompt });
+      }
+      messages.push({ role: 'user', content: request.prompt });
+
+      const completion = await openai.chat.completions.create({
+        model: config.modelName,
+        messages,
+        max_tokens: request.maxTokens || config.maxTokens || 1000,
+        temperature: request.temperature ?? config.temperature ?? 0.7,
+      });
+
+      return {
+        text: completion.choices[0]?.message?.content || '',
+        provider: 'openai',
+        model: config.modelName,
+        tokensUsed: completion.usage?.total_tokens,
+        latencyMs: 0,
+      };
+    } catch (error) {
+      throw new Error(
+        `OpenAI provider not available. Install with: npm install openai`
+      );
     }
-    messages.push({ role: 'user', content: request.prompt });
-
-    const completion = await openai.chat.completions.create({
-      model: config.modelName,
-      messages,
-      max_tokens: request.maxTokens || config.maxTokens || 1000,
-      temperature: request.temperature ?? config.temperature ?? 0.7,
-    });
-
-    return {
-      text: completion.choices[0]?.message?.content || '',
-      provider: 'openai',
-      model: config.model,
-      tokensUsed: completion.usage?.total_tokens,
-      latencyMs: 0,
-    };
   }
 
   /**
    * Call Anthropic Claude API
    */
   private async callAnthropic(request: LLMRequest, config: any): Promise<LLMResponse> {
-    const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const anthropic = new Anthropic({ apiKey: config.apiKey });
+    try {
+      const { default: Anthropic } = await import('@anthropic-ai/sdk');
+      const anthropic = new Anthropic({ apiKey: config.apiKey });
 
-    const message = await anthropic.messages.create({
-      model: config.modelName,
-      max_tokens: request.maxTokens || config.maxTokens || 1000,
-      temperature: request.temperature ?? config.temperature ?? 0.7,
-      system: request.systemPrompt,
-      messages: [{ role: 'user', content: request.prompt }],
-    });
+      const message = await anthropic.messages.create({
+        model: config.modelName,
+        max_tokens: request.maxTokens || config.maxTokens || 1000,
+        temperature: request.temperature ?? config.temperature ?? 0.7,
+        system: request.systemPrompt,
+        messages: [{ role: 'user', content: request.prompt }],
+      });
 
-    const textContent = message.content.find((block) => block.type === 'text');
+      const textContent = message.content.find((block) => block.type === 'text');
 
-    return {
-      text: textContent && 'text' in textContent ? textContent.text : '',
-      provider: 'anthropic',
-      model: config.modelName,
-      tokensUsed: message.usage.input_tokens + message.usage.output_tokens,
-      latencyMs: 0,
-    };
+      return {
+        text: textContent && 'text' in textContent ? textContent.text : '',
+        provider: 'anthropic',
+        model: config.modelName,
+        tokensUsed: message.usage.input_tokens + message.usage.output_tokens,
+        latencyMs: 0,
+      };
+    } catch (error) {
+      throw new Error(
+        `Anthropic provider not available. Install with: npm install @anthropic-ai/sdk`
+      );
+    }
   }
 }
 
