@@ -42,3 +42,11 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# local environment variables (NEVER COMMIT)
+.env
+.env.local
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
