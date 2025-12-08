@@ -4,7 +4,18 @@
       "Bash(git diff:*)",
       "Bash(git rm:*)",
       "Bash(git add:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(taskkill:*)",
+      "Bash(awk:*)",
+      "Bash(Stop-Process -Id 22560 -Force)",
+      "Bash(npx kill-port:*)",
+      "Bash(git commit:*)",
+      "Bash(npm install:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

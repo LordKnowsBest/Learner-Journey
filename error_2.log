@@ -1,0 +1,6 @@
+src/components/ui/calendar.tsx(57,9): error TS2353: Object literal may only specify known properties, and 'IconLeft' does not exist in type 'Partial<CustomComponents>'.
+src/components/ui/calendar.tsx(57,22): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/components/ui/calendar.tsx(60,23): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/lib/llm-router.ts(175,46): error TS2307: Cannot find module 'openai' or its corresponding type declarations.
+src/lib/llm-router.ts(204,49): error TS2307: Cannot find module '@anthropic-ai/sdk' or its corresponding type declarations.
+src/lib/llm-router.ts(215,47): error TS7006: Parameter 'block' implicitly has an 'any' type.
