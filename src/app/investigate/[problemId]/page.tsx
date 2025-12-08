@@ -8,10 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getProblemById, getConceptById } from "@/lib/data";
 import { useSession } from "@/context/SessionContext";
+import { useExplainability } from "@/context/ExplainabilityContext";
 import { SocraticChat } from "@/components/socratic-chat";
 import { ConceptCard } from "@/components/concept-card";
+import { ExplainabilitySidebar, ExplainabilityToggle } from "@/components/explainability-sidebar";
 import {
   Users,
   ChevronRight,
@@ -23,6 +31,7 @@ import {
   FileText,
   ArrowRight,
   Play,
+  HelpCircle,
 } from "lucide-react";
 import type { ProblemScenario, InvestigationPhase } from "@/lib/types";
 
@@ -39,6 +48,13 @@ export default function InvestigatePage() {
     updateInvestigationNotes,
     isConceptDiscovered,
   } = useSession();
+
+  const {
+    logConceptRevealed,
+    logPhaseTransition,
+    logMasteryUpdate,
+    updatePathExplanation,
+  } = useExplainability();
 
   const [problem, setProblem] = useState<ProblemScenario | null>(null);
   const [activeTab, setActiveTab] = useState("scenario");
@@ -77,13 +93,35 @@ export default function InvestigatePage() {
   const progressPercent = (completedPhasesCount / problem.phases.length) * 100;
 
   const handlePhaseComplete = () => {
-    if (currentPhaseId) {
+    if (currentPhaseId && currentPhase && problem) {
       // Discover concepts from this phase
-      currentPhase?.revealsConcepts.forEach((conceptId) => {
+      currentPhase.revealsConcepts.forEach((conceptId) => {
         if (!isConceptDiscovered(conceptId)) {
+          const concept = getConceptById(conceptId);
           discoverConcept(conceptId, currentPhaseId);
+
+          // Log to explainability
+          logConceptRevealed({
+            conceptId,
+            conceptTitle: concept?.title || conceptId,
+            phaseId: currentPhaseId,
+            reason: `Concept was revealed as part of completing the "${currentPhase.title}" phase.`,
+          });
         }
       });
+
+      // Find next phase
+      const currentIndex = problem.phases.findIndex(p => p.id === currentPhaseId);
+      const nextPhase = problem.phases[currentIndex + 1];
+
+      // Log phase transition
+      logPhaseTransition({
+        fromPhase: currentPhase.title,
+        toPhase: nextPhase?.title || 'Reflection',
+        conceptsDiscovered: currentProgress?.discoveredConcepts.length || 0,
+        reason: `Student completed all activities in "${currentPhase.title}" and is ready to ${nextPhase ? 'explore the next phase' : 'reflect on their learning'}.`,
+      });
+
       completePhase(currentPhaseId);
     }
   };
@@ -95,7 +133,16 @@ export default function InvestigatePage() {
 
   const handleConceptDiscover = (conceptId: string) => {
     if (currentPhaseId && !isConceptDiscovered(conceptId)) {
+      const concept = getConceptById(conceptId);
       discoverConcept(conceptId, currentPhaseId);
+
+      // Log to explainability
+      logConceptRevealed({
+        conceptId,
+        conceptTitle: concept?.title || conceptId,
+        phaseId: currentPhaseId,
+        reason: 'Student actively discovered this concept through their investigation and discussion.',
+      });
     }
   };
 
@@ -110,22 +157,37 @@ export default function InvestigatePage() {
   }
 
   return (
-    <div className="container mx-auto p-4 py-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">{problem.title}</h1>
-            <p className="text-muted-foreground">{problem.hook}</p>
+    <TooltipProvider delayDuration={300}>
+      <div className="container mx-auto p-4 py-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold">{problem.title}</h1>
+              <p className="text-muted-foreground">{problem.hook}</p>
+            </div>
+            <div className="flex items-start gap-4">
+              {/* AI Transparency Toggle */}
+              <ExplainabilityToggle />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="text-right cursor-help">
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 justify-end">
+                      Progress
+                      <HelpCircle className="w-3 h-3" />
+                    </p>
+                    <Progress value={progressPercent} className="w-32 mt-1" />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {completedPhasesCount} / {problem.phases.length} phases
+                    </p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Your progress through this investigation. Complete all phases to unlock reflection.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Progress</p>
-            <Progress value={progressPercent} className="w-32 mt-1" />
-            <p className="text-xs text-muted-foreground mt-1">
-              {completedPhasesCount} / {problem.phases.length} phases
-            </p>
-          </div>
-        </div>
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -133,22 +195,50 @@ export default function InvestigatePage() {
           <div className="lg:col-span-2 space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="scenario" className="flex items-center gap-1">
-                  <BookOpen className="w-4 h-4" />
-                  <span className="hidden sm:inline">Scenario</span>
-                </TabsTrigger>
-                <TabsTrigger value="investigate" className="flex items-center gap-1">
-                  <Lightbulb className="w-4 h-4" />
-                  <span className="hidden sm:inline">Investigate</span>
-                </TabsTrigger>
-                <TabsTrigger value="chat" className="flex items-center gap-1">
-                  <MessageCircle className="w-4 h-4" />
-                  <span className="hidden sm:inline">Ask Guide</span>
-                </TabsTrigger>
-                <TabsTrigger value="notes" className="flex items-center gap-1">
-                  <FileText className="w-4 h-4" />
-                  <span className="hidden sm:inline">Notes</span>
-                </TabsTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger value="scenario" className="flex items-center gap-1">
+                      <BookOpen className="w-4 h-4" />
+                      <span className="hidden sm:inline">Scenario</span>
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Read the problem scenario and understand the stakeholders involved</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger value="investigate" className="flex items-center gap-1">
+                      <Lightbulb className="w-4 h-4" />
+                      <span className="hidden sm:inline">Investigate</span>
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Work through investigation phases and discover key concepts</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger value="chat" className="flex items-center gap-1">
+                      <MessageCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">Ask Guide</span>
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Chat with the AI tutor who will ask questions to deepen your thinking</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <TabsTrigger value="notes" className="flex items-center gap-1">
+                      <FileText className="w-4 h-4" />
+                      <span className="hidden sm:inline">Notes</span>
+                    </TabsTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Write down your thoughts, questions, and discoveries</p>
+                  </TooltipContent>
+                </Tooltip>
               </TabsList>
 
               {/* Scenario Tab */}
@@ -169,10 +259,18 @@ export default function InvestigatePage() {
                 {/* Stakeholders */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="w-5 h-5" />
-                      People Involved
-                    </CardTitle>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <CardTitle className="flex items-center gap-2 cursor-help">
+                          <Users className="w-5 h-5" />
+                          People Involved
+                          <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                        </CardTitle>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Stakeholders are people affected by this situation. Understanding their different viewpoints is key to ethical analysis.</p>
+                      </TooltipContent>
+                    </Tooltip>
                     <CardDescription>
                       Consider each person's perspective
                     </CardDescription>
@@ -180,22 +278,26 @@ export default function InvestigatePage() {
                   <CardContent>
                     <div className="grid gap-3">
                       {problem.stakeholders.map((stakeholder) => (
-                        <div
-                          key={stakeholder.name}
-                          className="p-3 rounded-lg bg-muted/50"
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold">
-                              {stakeholder.name}
-                            </span>
-                            <Badge variant="outline" className="text-xs">
-                              {stakeholder.role}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {stakeholder.perspective}
-                          </p>
-                        </div>
+                        <Tooltip key={stakeholder.name}>
+                          <TooltipTrigger asChild>
+                            <div className="p-3 rounded-lg bg-muted/50 cursor-help hover:bg-muted transition-colors">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold">
+                                  {stakeholder.name}
+                                </span>
+                                <Badge variant="outline" className="text-xs">
+                                  {stakeholder.role}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {stakeholder.perspective}
+                              </p>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>Think about: How might {stakeholder.name}'s interests conflict with others? What would be fair from their point of view?</p>
+                          </TooltipContent>
+                        </Tooltip>
                       ))}
                     </div>
                   </CardContent>
@@ -405,20 +507,28 @@ export default function InvestigatePage() {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lightbulb className="w-5 h-5" />
-                  Concepts Discovered
-                </CardTitle>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <CardTitle className="flex items-center gap-2 cursor-help">
+                      <Lightbulb className="w-5 h-5" />
+                      Concepts Discovered
+                      <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                    </CardTitle>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>Key AI ethics concepts you've uncovered during your investigation. Click any concept to learn more and see related resources.</p>
+                  </TooltipContent>
+                </Tooltip>
                 <CardDescription>
                   {currentProgress.discoveredConcepts.length} concepts found
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {currentProgress.discoveredConcepts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    As you investigate, you'll discover key AI ethics concepts
-                    here.
-                  </p>
+                  <div className="text-sm text-muted-foreground text-center py-4">
+                    <p>As you investigate, you'll discover key AI ethics concepts here.</p>
+                    <p className="text-xs mt-2">Click on concept badges in the investigate tab or ask the AI guide about concepts.</p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {currentProgress.discoveredConcepts.map((discovery) => {
@@ -442,7 +552,17 @@ export default function InvestigatePage() {
             {currentPhase && currentPhase.hints.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">Need a hint?</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <CardTitle className="text-sm flex items-center gap-1 cursor-help">
+                        Need a hint?
+                        <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>If you're stuck, these hints can help guide your thinking without giving away the answer.</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </CardHeader>
                 <CardContent>
                   <details className="cursor-pointer">
@@ -466,6 +586,9 @@ export default function InvestigatePage() {
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Explainability Sidebar for Stakeholder Trust */}
+      <ExplainabilitySidebar />
+    </TooltipProvider>
   );
 }
