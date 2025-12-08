@@ -14,7 +14,7 @@ export default function TeacherLayout({
                     </div>
                 </div>
             </header>
-            <main className="container py-6">{children}</main>
+            <main className="container p-8 space-y-8">{children}</main>
         </div>
     );
 }

@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, InfoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface MetricCardProps {
     label: string;
@@ -9,7 +10,8 @@ export interface MetricCardProps {
     trend?: "up" | "down" | "neutral";
     trendValue?: string;
     progress?: number;
-    className?: string; // Add className prop for flexibility
+    className?: string;
+    tooltip?: string;
 }
 
 export function MetricCard({
@@ -19,12 +21,28 @@ export function MetricCard({
     trend,
     trendValue,
     progress,
-    className, // Destructure className
+    className,
+    tooltip,
 }: MetricCardProps) {
     return (
-        <Card className={cn("overflow-hidden", className)}> {/* Apply className here */}
+        <Card className={cn(
+            "overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-default",
+            className
+        )}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+                    {tooltip && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <InfoIcon className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p className="max-w-xs">{tooltip}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
                 {trend && (
                     <div
                         className={cn(

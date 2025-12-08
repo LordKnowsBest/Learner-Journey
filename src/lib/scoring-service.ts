@@ -43,7 +43,7 @@ export async function evaluateResponse(
 
     // 2. AI Semantic Evaluation
     const { output } = await ai.generate({
-        model: 'googleai/gemini-2.5-flash',
+        model: 'googleai/gemini-1.5-flash',
         prompt: `You are an expert teacher evaluating a student's answer.
       
       PHASE PROMPT: "${phasePrompt}"

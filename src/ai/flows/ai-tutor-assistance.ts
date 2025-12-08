@@ -96,7 +96,7 @@ const socraticTutorFlow = ai.defineFlow(
           'Default Socratic questioning to encourage discovery';
 
     const { output } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash',
+      model: 'googleai/gemini-1.5-flash',
       prompt: `You are a Socratic tutor helping a 7th-8th grade student investigate an AI ethics problem.
 
 PROBLEM: ${problem?.title || 'General AI Ethics'}
@@ -212,7 +212,6 @@ export async function askTutor(input: AskTutorInput): Promise<AskTutorOutput> {
 
   return {
     answer: result.response,
-    answer: result.response,
   };
 }
 
@@ -225,6 +224,7 @@ const ConceptNodeSchema = z.object({
 const knowledgeGraphNodeTool = ai.defineTool(
   {
     name: 'getKnowledgeGraphNode',
+    description: 'Retrieves details about a specific concept node from the knowledge graph.',
     inputSchema: z.object({ nodeId: z.string().describe('The ID of the concept node to retrieve') }),
     outputSchema: ConceptNodeSchema,
   },
@@ -268,7 +268,7 @@ Rules:
 4. Stay on the topic of AI Ethics.
 5. If the question is off-topic, gently redirect the student back to the current topic of study. Do not answer off-topic questions.`,
       tools: [knowledgeGraphNodeTool],
-      model: 'googleai/gemini-2.5-flash',
+      model: 'googleai/gemini-1.5-flash',
       output: { schema: AskTutorOutputSchema }
     });
 
@@ -285,7 +285,7 @@ const ConceptExplanationOutputSchema = z.object({
 
 async function explainConcept(concept: any, input: { problemContext?: string, studentQuestion?: string }) {
   const { output } = await ai.generate({
-    model: 'googleai/gemini-2.5-flash',
+    model: 'googleai/gemini-1.5-flash',
     prompt: `You are explaining the AI ethics concept "${concept.title}" to a 7th-8th grader.
 
 CONCEPT: ${concept.title}
@@ -314,8 +314,7 @@ Keep the total response under 200 words.`,
     thinkAboutThis: concept.guidingQuestions?.[0] || 'What do you think about this?',
   };
 }
-  };
-}
+
 
 
 
@@ -368,7 +367,7 @@ export async function evaluateReflection(input: z.infer<typeof ReflectionFeedbac
   }
 
   const { output } = await ai.generate({
-    model: 'googleai/gemini-2.5-flash',
+    model: 'googleai/gemini-1.5-flash',
     prompt: `You are evaluating a 7th-8th grader's reflection on an AI ethics problem.
 
 PROBLEM: ${problem.title}

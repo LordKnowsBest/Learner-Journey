@@ -73,17 +73,28 @@ export function MasteryGate({ phasePrompt, requiredKeywords, onPass }: MasteryGa
         return (
             <Card className="border-green-500 bg-green-50/50 dark:bg-green-900/10 backdrop-blur">
                 <CardContent className="pt-6 text-center space-y-4">
-                    <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", bounce: 0.5 }}
-                        className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto"
-                    >
-                        <Star className="w-10 h-10 text-green-600 fill-green-600" />
-                    </motion.div>
+                    <div className="flex justify-center gap-1 my-4">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <motion.div
+                                key={star}
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: star * 0.1 }}
+                            >
+                                <Star
+                                    className={`w-8 h-8 ${star <= (result.score >= 90 ? 5 : 4)
+                                        ? "text-yellow-400 fill-yellow-400"
+                                        : "text-gray-300"
+                                        }`}
+                                />
+                            </motion.div>
+                        ))}
+                    </div>
 
                     <h3 className="text-2xl font-bold text-green-700 dark:text-green-400">Mastery Achieved!</h3>
-                    <p className="text-muted-foreground">Score: {result.score}%</p>
+                    <p className="text-muted-foreground font-medium">
+                        Rating: {result.score >= 90 ? "5/5" : "4/5"} Stars ({result.score}%)
+                    </p>
 
                     <div className="flex justify-center gap-2">
                         <Badge variant="outline" className="bg-background text-green-600 border-green-200">

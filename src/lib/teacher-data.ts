@@ -33,6 +33,8 @@ export interface StudentProgress {
     name: string;
     learningSignalScore: number;
     status: "on-track" | "needs-attention" | "at-risk" | "accelerated";
+    gradeTrend: "up" | "down" | "neutral";
+    lastActive: string;
     alerts: Alert[];
 }
 
@@ -73,6 +75,8 @@ export const MOCK_STUDENTS: StudentProgress[] = [
         name: "Alex R.",
         learningSignalScore: 88,
         status: "on-track",
+        gradeTrend: "up",
+        lastActive: "2 min ago",
         alerts: [],
     },
     {
@@ -80,6 +84,8 @@ export const MOCK_STUDENTS: StudentProgress[] = [
         name: "Jason M.",
         learningSignalScore: 42,
         status: "at-risk",
+        gradeTrend: "down",
+        lastActive: "1 day ago",
         alerts: [MOCK_ALERTS[0]],
     },
     {
@@ -87,6 +93,8 @@ export const MOCK_STUDENTS: StudentProgress[] = [
         name: "Sarah K.",
         learningSignalScore: 58,
         status: "needs-attention",
+        gradeTrend: "neutral",
+        lastActive: "4 hours ago",
         alerts: [MOCK_ALERTS[1]],
     },
     {
@@ -94,10 +102,32 @@ export const MOCK_STUDENTS: StudentProgress[] = [
         name: "Emily W.",
         learningSignalScore: 94,
         status: "accelerated",
+        gradeTrend: "up",
+        lastActive: "10 min ago",
         alerts: [],
     },
     // Add more mock students as needed for UI density
-    { studentId: "stu_02", name: "Jordan B.", learningSignalScore: 75, status: "on-track", alerts: [] },
-    { studentId: "stu_03", name: "Casey L.", learningSignalScore: 82, status: "on-track", alerts: [] },
-    { studentId: "stu_05", name: "Morgan T.", learningSignalScore: 71, status: "on-track", alerts: [] },
+    { studentId: "stu_02", name: "Jordan B.", learningSignalScore: 75, status: "on-track", gradeTrend: "neutral", lastActive: "1 hour ago", alerts: [] },
+    { studentId: "stu_03", name: "Casey L.", learningSignalScore: 82, status: "on-track", gradeTrend: "up", lastActive: "30 min ago", alerts: [] },
+    { studentId: "stu_05", name: "Morgan T.", learningSignalScore: 71, status: "on-track", gradeTrend: "neutral", lastActive: "15 min ago", alerts: [] },
 ];
+
+// Helper to export data to CSV
+export function exportClassDataToCSV(): string {
+    const headers = ["Student ID", "Name", "Status", "Grade Trend", "Learning Signal", "Last Active"];
+    const rows = MOCK_STUDENTS.map(s => [
+        s.studentId,
+        s.name,
+        s.status,
+        s.gradeTrend,
+        s.learningSignalScore.toString(),
+        s.lastActive
+    ]);
+
+    const csvContent = [
+        headers.join(","),
+        ...rows.map(row => row.join(","))
+    ].join("\n");
+
+    return csvContent;
+}

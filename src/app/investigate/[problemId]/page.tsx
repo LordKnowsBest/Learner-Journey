@@ -59,16 +59,16 @@ export default function InvestigatePage() {
   } = useExplainability();
 
   const [problem, setProblem] = useState<ProblemScenario | null>(null);
-  const [activeTab, setActiveTab] = useState("investigate");
+  const [activeTab, setActiveTab] = useState("scenario");
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
     const p = getProblemById(problemId);
+
     if (p) {
       setProblem(p);
-      // Auto-start the problem if it's not active in the session
-      // This handles deep links or refreshes
       const progress = getCurrentProblem();
+
       if (!progress || progress.scenarioId !== problemId) {
         startProblem(problemId);
       }
