@@ -1,0 +1,419 @@
+# KAITE TEACHER DASHBOARD
+## Technical Specification for Development Team
+
+**Version 1.0 | December 2025**
+
+*Knowledge-graph Assisted Instructional Tutoring Environment*
+
+**Prepared by:** Team D | GRAD 589/588 Capstone  
+**Technical Lead:** Jagruti Mule | **Research Lead:** Levy Rivers
+
+---
+
+## 1. Executive Summary
+
+The KAITE Teacher Dashboard provides educators with real-time monitoring, intervention guidance, and curriculum alignment tools to support AI literacy instruction for middle school CTE students. This specification defines the technical requirements, data models, and UI components necessary for development implementation.
+
+| Target Users | Class Size | Module Duration | Time Savings |
+|:------------:|:----------:|:---------------:|:------------:|
+| CTE Teachers | 25-30 Students | 8-16 Weeks | 4.5 hrs/week |
+
+---
+
+## 2. Dashboard Architecture Overview
+
+The Teacher Dashboard consists of four primary wireframe screens, each addressing distinct educator needs within the KAITE platform.
+
+### 2.1 Screen Architecture
+
+| Screen | Primary Function | Key Components |
+|--------|------------------|----------------|
+| **Class Overview** | Real-time class monitoring with aggregate performance metrics | Progress heatmap, engagement metrics, intervention alerts |
+| **Individual Progress** | Student-level analytics with at-risk identification | Student roster, Learning Signal Score, intervention tools |
+| **Learning Paths** | Knowledge graph visualization with curriculum pacing | Node completion tracking, path efficiency, bottleneck alerts |
+| **Reports & Compliance** | Standards alignment and ethical oversight transparency | ISTE/ACTE mapping, bias audit access, consent status |
+
+---
+
+## 3. Screen Specifications
+
+### 3.1 Class Overview Dashboard
+
+#### 3.1.1 Header Component
+
+| Element | Data Type | Firebase Path |
+|---------|-----------|---------------|
+| Class Name | String | `/classes/{classId}/name` |
+| Period/Section | String | `/classes/{classId}/period` |
+| Grade Level | Integer (6-8) | `/classes/{classId}/gradeLevel` |
+| Student Count | Integer | `/classes/{classId}/studentCount` |
+| Module Week | String ("Week X of Y") | `/classes/{classId}/currentWeek` |
+| Class Average Mastery | Float (0-100%) | `/classes/{classId}/avgMastery` |
+
+#### 3.1.2 Navigation Tabs
+
+Implement horizontal tab navigation with the following structure:
+
+- **Overview** (default active) - Class aggregate metrics
+- **Individual Progress** - Student roster and detail views
+- **Learning Paths** - Knowledge graph navigation
+- **Assessments** - Quiz results and competency tracking
+- **Reports** - Standards alignment and compliance
+
+#### 3.1.3 Real-Time Metrics Cards
+
+| Metric | Display Format | Update Frequency | Calculation |
+|--------|----------------|------------------|-------------|
+| Active Today | X/Y + progress bar | Real-time | `COUNT(sessions today)` |
+| Avg Time on Task | XX min + delta | Hourly | `AVG(session_duration)` |
+| Concepts Mastered | X/Y + next concept | On assessment | `mastery_score >= 80%` |
+
+---
+
+### 3.2 Intervention Alert System
+
+The dashboard implements a 3-tier alert system for early identification of struggling students. Alerts are generated based on learning analytics and require teacher acknowledgment.
+
+#### 3.2.1 Alert Tier Definitions
+
+| Tier | Trigger Conditions | Visual Indicator | Recommended Action |
+|------|-------------------|------------------|-------------------|
+| 🔴 **CRITICAL** | 3+ failed assessments OR 5+ days inactive OR mastery <40% | Red banner, audio chime, persistent badge | Immediate 1:1 intervention required |
+| 🟠 **WARNING** | 2 failed assessments OR 3 days inactive OR mastery 40-60% | Orange banner, visual badge | Small group scaffolding recommended |
+| 🟢 **MONITOR** | 1 failed assessment OR engagement drop >20% | Yellow icon, tooltip only | Passive monitoring, check next session |
+
+#### 3.2.2 Alert Data Model
+
+**Firebase Collection:** `/alerts/{alertId}`
+
+```typescript
+interface Alert {
+  alertId: string;              // Auto-generated UUID
+  studentId: string;            // Firebase Auth UID (pseudonymized)
+  classId: string;              // Reference to class document
+  tier: "CRITICAL" | "WARNING" | "MONITOR";
+  triggerType: string;          // e.g., "failed_assessment", "inactivity"
+  createdAt: Timestamp;
+  acknowledgedAt: Timestamp | null;
+  resolvedAt: Timestamp | null;
+  interventionNotes: string;    // Teacher input
+}
+```
+
+---
+
+### 3.3 Individual Student View
+
+#### 3.3.1 Learning Signal Score
+
+A composite metric (0-100) aggregating engagement, accuracy, and growth trajectory. Display as large numeric with breakdown bars.
+
+| Component | Weight | Calculation |
+|-----------|--------|-------------|
+| Engagement | 40% | `(sessions/week × time_on_task × help_seeking_ratio)` |
+| Accuracy | 35% | `(quiz_correct / quiz_total × concept_mastery_rate)` |
+| Growth | 25% | `(current_mastery - baseline) / baseline × 100` |
+
+#### 3.3.2 Student Status Indicators
+
+- 🟢 **On Track** (green pill): Learning Signal ≥70, no active alerts
+- 🟠 **Needs Attention** (orange pill): Learning Signal 50-69 OR WARNING alert
+- 🔴 **At Risk** (red pill): Learning Signal <50 OR CRITICAL alert
+- 🔵 **Accelerated** (blue pill): Learning Signal ≥90, ahead of pace
+
+---
+
+## 4. Data Architecture
+
+### 4.1 Firebase Collection Structure
+
+> ⚠️ **Privacy Note:** All student identifiers use pseudonymized Firebase Auth UIDs. No PII is stored in the analytics database per FERPA requirements.
+
+| Collection | Purpose | Update Frequency |
+|------------|---------|------------------|
+| `/teachers` | Teacher profiles, class assignments, preferences | On profile update |
+| `/classes` | Class rosters, aggregate metrics, module progress | Real-time (aggregate) / Daily (computed) |
+| `/students` | Individual progress, mastery scores, learning paths | On interaction (node traversal, quiz) |
+| `/sessions` | Login/logout times, activity logs, duration | On session start/end |
+| `/alerts` | Intervention alerts, acknowledgments, resolutions | On trigger condition met |
+| `/assessments` | Quiz responses, scores, confidence ratings | On assessment submission |
+| `/knowledgeGraph` | Concept nodes, relationships, difficulty metadata | On curriculum update (admin only) |
+
+### 4.2 Student Progress Document Schema
+
+**Firebase Path:** `/students/{studentId}`
+
+```typescript
+interface StudentProgress {
+  studentId: string;
+  classIds: string[];
+  
+  // Mastery Tracking
+  conceptMastery: {
+    [nodeId: string]: {
+      score: number;           // 0-100
+      attempts: number;
+      lastAttempt: Timestamp;
+      status: "not_started" | "in_progress" | "mastered";
+    }
+  };
+  
+  // Aggregate Metrics
+  overallMastery: number;      // Weighted average
+  learningSignalScore: number; // Composite 0-100
+  nodesCompleted: number;
+  totalNodes: number;
+  
+  // Engagement
+  totalSessionTime: number;    // Minutes
+  avgSessionDuration: number;
+  lastActive: Timestamp;
+  weeklySessionCount: number;
+  
+  // Path Tracking
+  currentPath: string[];       // Node IDs in order
+  recommendedNext: string;     // Next node ID
+  pathEfficiency: number;      // % optimal path adherence
+}
+```
+
+---
+
+## 5. Authentication & Authorization
+
+### 5.1 SSO Integration
+
+KAITE supports school-based Single Sign-On through Firebase Authentication with the following identity providers:
+
+1. **Google Workspace for Education:** OAuth 2.0 with domain restriction
+2. **Microsoft Azure AD:** SAML 2.0 for district integration
+3. **Clever:** Library roster sync for automated class management
+
+### 5.2 Role-Based Access Control
+
+| Role | Dashboard Access | Data Scope |
+|------|------------------|------------|
+| **Teacher** | Full Teacher Dashboard access, intervention tools, report generation | Assigned classes only |
+| **Administrator** | Teacher Dashboard + Admin Dashboard, bias audit access, ROI tracking | School/District wide |
+| **Student** | Student Dashboard only (no teacher view access) | Own data only |
+
+### 5.3 Firebase Security Rules (Example)
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Teachers can only read their assigned classes
+    match /classes/{classId} {
+      allow read: if request.auth != null 
+        && request.auth.token.role == "teacher"
+        && classId in request.auth.token.assignedClasses;
+    }
+    
+    // Teachers can read/write alerts for their classes
+    match /alerts/{alertId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.role == "teacher"
+        && resource.data.classId in request.auth.token.assignedClasses;
+    }
+    
+    // Students can only read their own data
+    match /students/{studentId} {
+      allow read: if request.auth != null
+        && request.auth.uid == studentId;
+    }
+  }
+}
+```
+
+---
+
+## 6. LMS Integration Requirements
+
+### 6.1 LTI 1.3 Implementation
+
+KAITE integrates with existing Learning Management Systems via the LTI 1.3 standard:
+
+- **Supported Platforms:** Canvas, Google Classroom, Schoology, Blackboard
+- **Launch Types:** Deep linking, resource link, assignment submission
+- **Grade Passback:** Assignment and Gradebook Services 2.0
+- **Roster Sync:** Names and Role Provisioning Services 2.0
+
+### 6.2 Standards Alignment Display
+
+The Teacher Dashboard provides mapping to educational standards via the Reports tab:
+
+| Standard | Relevant Areas | Dashboard Display |
+|----------|----------------|-------------------|
+| ISTE Standards for Students | Computational Thinker, Digital Citizen, Knowledge Constructor | Progress bar per standard per student |
+| ACTE Career Ready Practices | Critical Thinking, Technical Skills, Problem Solving | Competency badge system |
+| AI4K12 Five Big Ideas | Perception, Representation, Learning, Interaction, Impact | Knowledge graph node coverage |
+
+---
+
+## 7. Ethical Oversight Transparency
+
+### 7.1 Bias Audit Access
+
+Teachers have read-only access to bias audit results for their classes via the Reports tab. Audit data is generated quarterly by the Ethical Oversight Team.
+
+- **Demographic Performance Gaps:** Visual display of performance variance across gender, SES, EL status (target: ≤20%)
+- **Algorithm Fairness Metrics:** False positive/negative rates for intervention alerts by demographic
+- **Content Bias Flags:** Any identified bias issues in knowledge graph content
+
+### 7.2 Privacy Consent Dashboard
+
+Teachers can view consent status for their students:
+
+- **Parental Consent Status:** Active / Pending / Withdrawn (COPPA compliance for <13)
+- **Data Collection Scope:** What data is collected, why, and retention period
+- **Student Data Access Log:** Audit trail of who accessed student records (FERPA)
+
+### 7.3 Explainability Features
+
+Per DOE and NIST AI RMF requirements, teachers can access:
+
+- **Intervention Trigger Logic:** Why a specific student triggered an alert
+- **Learning Path Recommendations:** Knowledge graph reasoning behind suggested paths
+- **LLM Response Sources:** Source node references for tutoring explanations
+
+---
+
+## 8. Performance Requirements
+
+| Metric | Target | Priority |
+|--------|--------|----------|
+| Page Load Time (Class Overview) | <2 seconds | **P0** |
+| Real-time Metric Update Latency | <500ms from Firebase listener | **P0** |
+| Student Detail Load Time | <1.5 seconds with full history | **P1** |
+| Alert Delivery Time | <5 seconds from trigger condition | **P0** |
+| System Uptime (School Hours) | 99% availability 7am-4pm local | **P0** |
+| Report Generation Time | <10 seconds for class-level PDF export | **P2** |
+| Concurrent Users per Class | 30 students + 2 teachers without degradation | **P0** |
+
+### 8.1 Accessibility Requirements (WCAG 2.1 AA)
+
+1. **Keyboard Navigation:** All interactive elements accessible via Tab/Enter/Space
+2. **Screen Reader Support:** ARIA labels on all charts, tables, and dynamic content
+3. **Color Contrast:** Minimum 4.5:1 ratio for text, 3:1 for UI components
+4. **Focus Indicators:** Visible focus rings on interactive elements
+5. **Mobile Responsive:** Functional on tablet devices (768px+ viewport)
+
+---
+
+## Appendix A: UI Component Library
+
+### A.1 Design Tokens
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--color-primary` | `#667EEA` | Primary actions, active tabs, links |
+| `--color-success` | `#48BB78` | On-track status, positive metrics |
+| `--color-warning` | `#ED8936` | Warning alerts, attention needed |
+| `--color-danger` | `#F56565` | Critical alerts, at-risk status |
+| `--color-accelerated` | `#2B6CB0` | Accelerated learner indicators |
+| `--color-text-primary` | `#2D3748` | Primary text |
+| `--color-text-secondary` | `#718096` | Secondary/muted text |
+| `--color-bg-alt` | `#F7FAFC` | Alternating row backgrounds |
+| `--font-family` | `Inter, system-ui, sans-serif` | All UI text |
+
+### A.2 Component Stack Recommendation
+
+- **Framework:** React 18+ with TypeScript
+- **State Management:** React Query for Firebase data + Zustand for local state
+- **UI Components:** shadcn/ui (Radix primitives + Tailwind)
+- **Charts:** Recharts for progress visualization
+- **Tables:** TanStack Table for sortable student roster
+- **Icons:** Lucide React
+- **Forms:** React Hook Form + Zod validation
+
+### A.3 Key Component Specifications
+
+#### Metric Card Component
+
+```tsx
+interface MetricCardProps {
+  label: string;
+  value: string | number;
+  subtext?: string;
+  trend?: "up" | "down" | "neutral";
+  trendValue?: string;
+  progress?: number; // 0-100 for progress bar
+}
+```
+
+#### Alert Banner Component
+
+```tsx
+interface AlertBannerProps {
+  tier: "CRITICAL" | "WARNING" | "MONITOR";
+  studentCount: number;
+  concept: string;
+  onViewDetails: () => void;
+  onDismiss: () => void;
+}
+```
+
+#### Student Status Pill Component
+
+```tsx
+interface StatusPillProps {
+  status: "on-track" | "needs-attention" | "at-risk" | "accelerated";
+  showLabel?: boolean;
+}
+```
+
+---
+
+## Appendix B: API Endpoints (Firebase Functions)
+
+### B.1 Computed Metrics
+
+These Cloud Functions run on schedule to compute aggregate metrics:
+
+| Function | Trigger | Purpose |
+|----------|---------|---------|
+| `computeClassMetrics` | Every 15 minutes | Update class-level aggregates |
+| `computeLearningSignal` | On student activity | Recalculate Learning Signal Score |
+| `checkAlertTriggers` | On assessment/session end | Evaluate alert conditions |
+| `generateWeeklyReport` | Sunday 11pm | Create weekly progress snapshots |
+
+### B.2 Real-time Listeners
+
+```typescript
+// Class Overview - Real-time updates
+const classRef = doc(db, 'classes', classId);
+onSnapshot(classRef, (doc) => {
+  updateClassMetrics(doc.data());
+});
+
+// Alerts - Real-time with query filter
+const alertsQuery = query(
+  collection(db, 'alerts'),
+  where('classId', '==', classId),
+  where('resolvedAt', '==', null),
+  orderBy('createdAt', 'desc')
+);
+onSnapshot(alertsQuery, (snapshot) => {
+  updateActiveAlerts(snapshot.docs);
+});
+```
+
+---
+
+## Appendix C: Data Retention & Compliance
+
+| Data Category | Retention Period | Deletion Trigger | Compliance |
+|---------------|------------------|------------------|------------|
+| Student Progress | 3 years | End of educational relationship | FERPA |
+| Session Logs | 1 year | Rolling deletion | FERPA |
+| Alert History | 3 years | With student record | FERPA |
+| Consent Records | Duration of enrollment + 3 years | Upon request | COPPA |
+| Audit Logs | 7 years | Regulatory requirement | SOC 2 |
+
+---
+
+*— END OF SPECIFICATION —*
+
+*Document Version 1.0 | December 2025 | Team D Capstone*

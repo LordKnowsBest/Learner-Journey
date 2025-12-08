@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AppHeader } from "@/components/header";
 import { Toaster } from "@/components/ui/toaster";
+import { BadgeNotification } from "@/components/gamification/badge-notification";
+import { GamificationProvider } from "@/context/GamificationContext";
 
 export const metadata: Metadata = {
   title: "KAITE Demo",
@@ -24,9 +26,12 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <AppHeader />
-        <main>{children}</main>
-        <Toaster />
+        <GamificationProvider>
+          <AppHeader />
+          <main>{children}</main>
+          <BadgeNotification />
+          <Toaster />
+        </GamificationProvider>
       </body>
     </html>
   );

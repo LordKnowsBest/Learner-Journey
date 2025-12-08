@@ -1,4 +1,3 @@
-'use client';
 import { SessionProvider } from '@/context/SessionContext';
 import { ExplainabilityProvider } from '@/context/ExplainabilityContext';
 

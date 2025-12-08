@@ -1,17 +1,23 @@
 "use client";
 
-import { BrainCircuit, Target, Network, BarChart3 } from "lucide-react";
+import { BrainCircuit, Target, Network, BarChart3, GraduationCap } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { XpHud } from "@/components/gamification/xp-hud";
 
 export function AppHeader() {
   const pathname = usePathname();
+
+  if (pathname?.startsWith("/teacher")) {
+    return null;
+  }
 
   const navItems = [
     { href: "/problems", label: "Problems", icon: Target },
     { href: "/graph", label: "Concepts", icon: Network },
     { href: "/journey-summary", label: "Progress", icon: BarChart3 },
+    { href: "/teacher", label: "Teacher", icon: GraduationCap },
   ];
 
   return (
@@ -23,28 +29,30 @@ export function AppHeader() {
             KAITE
           </h1>
         </Link>
-
-        <nav className="flex items-center gap-1 sm:gap-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-1 px-2 sm:px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary-foreground/20"
-                    : "hover:bg-primary-foreground/10"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="flex items-center gap-4">
+          <XpHud />
+          <nav className="flex items-center gap-1 sm:gap-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-1 px-2 sm:px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-primary-foreground/20"
+                      : "hover:bg-primary-foreground/10"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </header>
   );

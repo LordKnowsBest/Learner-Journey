@@ -87,13 +87,13 @@ const socraticTutorFlow = ai.defineFlow(
 
     // Build context for explainability
     const stuckStatus = input.stuckCount >= 3 ? 'significantly stuck' :
-                        input.stuckCount >= 2 ? 'somewhat stuck' :
-                        input.stuckCount >= 1 ? 'slightly stuck' : 'progressing well';
+      input.stuckCount >= 2 ? 'somewhat stuck' :
+        input.stuckCount >= 1 ? 'slightly stuck' : 'progressing well';
 
     const modeReason = input.mode ? `Teacher requested ${input.mode} mode` :
-                       input.stuckCount >= 3 ? `Student appears stuck (${input.stuckCount} help requests), switching to explain mode` :
-                       input.stuckCount >= 2 ? `Student needs more guidance (${input.stuckCount} help requests), using hint mode` :
-                       'Default Socratic questioning to encourage discovery';
+      input.stuckCount >= 3 ? `Student appears stuck (${input.stuckCount} help requests), switching to explain mode` :
+        input.stuckCount >= 2 ? `Student needs more guidance (${input.stuckCount} help requests), using hint mode` :
+          'Default Socratic questioning to encourage discovery';
 
     const { output } = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
@@ -135,10 +135,10 @@ IMPORTANT: Also provide explainability information for parents/teachers:
       pedagogicalIntent: effectiveMode === 'socratic'
         ? 'Encourage independent discovery through guided questioning'
         : effectiveMode === 'hint'
-        ? 'Provide scaffolding while maintaining student agency'
-        : effectiveMode === 'explain'
-        ? 'Build foundational understanding before resuming discovery'
-        : 'Deepen critical thinking through challenging questions',
+          ? 'Provide scaffolding while maintaining student agency'
+          : effectiveMode === 'explain'
+            ? 'Build foundational understanding before resuming discovery'
+            : 'Deepen critical thinking through challenging questions',
       adaptationFactors: [
         {
           factor: 'Help Request Count',
@@ -212,8 +212,112 @@ export async function askTutor(input: AskTutorInput): Promise<AskTutorOutput> {
 
   return {
     answer: result.response,
+    answer: result.response,
   };
 }
+
+const ConceptNodeSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+});
+
+const knowledgeGraphNodeTool = ai.defineTool(
+  {
+    name: 'getKnowledgeGraphNode',
+    inputSchema: z.object({ nodeId: z.string().describe('The ID of the concept node to retrieve') }),
+    outputSchema: ConceptNodeSchema,
+  },
+  async (input) => {
+    const concept = getConceptById(input.nodeId);
+    if (concept) {
+      return {
+        id: concept.id,
+        title: concept.title,
+        description: concept.description,
+      };
+    }
+    return {
+      id: 'unknown',
+      title: 'Unknown Concept',
+      description: 'Concept not found.'
+    };
+  }
+);
+
+
+const askTutorFlow = ai.defineFlow(
+  {
+    name: 'askTutorFlow',
+    inputSchema: AskTutorInputSchema,
+    outputSchema: AskTutorOutputSchema,
+  },
+  async (input) => {
+
+    const { output } = await ai.generate({
+      prompt: `Student question: ${input.question}`,
+      system: `You are an AI literacy tutor for 7th-8th grade students.
+
+Your role is to help students understand concepts related to AI Ethics.
+When a student asks a question, you must decide if it is related to the current topic. To get information on the current topic, you MUST use the getKnowledgeGraphNode tool.
+
+Rules:
+1. Use simple 7th-grade language.
+2. Give real-world examples relevant to a middle schooler (social media, school, video games).
+3. Keep answers concise, ideally under 100 words.
+4. Stay on the topic of AI Ethics.
+5. If the question is off-topic, gently redirect the student back to the current topic of study. Do not answer off-topic questions.`,
+      tools: [knowledgeGraphNodeTool],
+      model: 'googleai/gemini-2.5-flash',
+      output: { schema: AskTutorOutputSchema }
+    });
+
+    return output!;
+  }
+);
+
+const ConceptExplanationOutputSchema = z.object({
+  explanation: z.string(),
+  realWorldExample: z.string(),
+  connectionToCurrentProblem: z.string(),
+  thinkAboutThis: z.string(),
+});
+
+async function explainConcept(concept: any, input: { problemContext?: string, studentQuestion?: string }) {
+  const { output } = await ai.generate({
+    model: 'googleai/gemini-2.5-flash',
+    prompt: `You are explaining the AI ethics concept "${concept.title}" to a 7th-8th grader.
+
+CONCEPT: ${concept.title}
+DESCRIPTION: ${concept.description}
+KEY INSIGHTS: ${concept.keyInsights?.join('; ') || ''}
+
+${input.problemContext ? `CURRENT PROBLEM CONTEXT: ${input.problemContext}` : ''}
+${input.studentQuestion ? `STUDENT'S QUESTION: ${input.studentQuestion}` : ''}
+
+Provide:
+1. A clear, simple explanation (2-3 sentences, 7th grade reading level)
+2. A relatable real-world example (social media, school, games)
+3. How this connects to their current problem investigation
+4. A thought-provoking question to consider
+
+Keep the total response under 200 words.`,
+    output: {
+      schema: ConceptExplanationOutputSchema,
+    },
+  });
+
+  return output || {
+    explanation: concept.description,
+    realWorldExample: 'Think about how this applies to apps you use every day.',
+    connectionToCurrentProblem: 'Consider how this concept relates to the problem you\'re investigating.',
+    thinkAboutThis: concept.guidingQuestions?.[0] || 'What do you think about this?',
+  };
+}
+  };
+}
+
+
 
 // ============================================
 // REFLECTION FEEDBACK FLOW
@@ -277,9 +381,9 @@ ${reflectionPrompt.rubricCriteria.map(c => `- ${c.criterion} (${c.weight}%): ${c
 
 CONCEPTS THEY SHOULD DEMONSTRATE:
 ${reflectionPrompt.assessesConcepts.map(id => {
-  const c = getConceptById(id);
-  return c ? `- ${c.title}: ${c.description}` : '';
-}).filter(Boolean).join('\n')}
+      const c = getConceptById(id);
+      return c ? `- ${c.title}: ${c.description}` : '';
+    }).filter(Boolean).join('\n')}
 
 CONCEPTS THEY DISCOVERED DURING INVESTIGATION:
 ${input.conceptsDiscovered.join(', ')}
