@@ -49,6 +49,7 @@ export default function InvestigatePage() {
     discoverConcept,
     updateInvestigationNotes,
     isConceptDiscovered,
+    startProblem,
   } = useSession();
 
   const {
@@ -79,11 +80,26 @@ export default function InvestigatePage() {
 
   const currentProgress = getCurrentProblem();
 
+  // Initialize session if needed
+  useEffect(() => {
+    if (problemId && !currentProgress) {
+      startProblem(problemId);
+    }
+  }, [problemId, currentProgress, startProblem]);
+
   useEffect(() => {
     if (currentProgress) {
       setNotes(currentProgress.investigationNotes);
     }
   }, [currentProgress]);
+
+  // Check if we're in reflection mode (moved to top level)
+  useEffect(() => {
+    if (currentProgress?.status === "reflecting") {
+      goToReflection();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProgress, problemId, router]);
 
   if (!problem || !currentProgress) {
     return (
@@ -158,11 +174,9 @@ export default function InvestigatePage() {
     router.push(`/reflect/${problemId}`);
   };
 
-  // Check if we're in reflection mode
-  if (currentProgress.status === "reflecting") {
-    goToReflection();
-    return null;
-  }
+
+
+
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -247,10 +261,10 @@ export default function InvestigatePage() {
                       <p>Write down your thoughts, questions, and discoveries</p>
                     </TooltipContent>
                   </Tooltip>
-                </TabsList >
+                </TabsList>
 
                 {/* Scenario Tab */}
-                < TabsContent value="scenario" className="space-y-4" >
+                <TabsContent value="scenario" className="space-y-4">
                   <Card>
                     <CardHeader>
                       <CardTitle>The Situation</CardTitle>
@@ -305,22 +319,6 @@ export default function InvestigatePage() {
                             <TooltipContent className="max-w-xs">
                               <p>Think about: How might {stakeholder.name}'s interests conflict with others? What would be fair from their point of view?</p>
                             </TooltipContent>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent >
-
-                {/* Investigate Tab */}
-                < TabsContent value="investigate" className="space-y-4" >
-                  {/* Phase Navigation */}
-                  < Card >
-                    <CardHeader>
-                      <CardTitle>Investigation Phases</CardTitle>
-                      <CardDescription>
-                        Work through each phase to understand the problem
-                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
@@ -371,234 +369,93 @@ export default function InvestigatePage() {
                                   <Badge className="bg-primary">Current</Badge>
                                 )}
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card >
-
-                  {/* Current Phase Content */}
-                  {
-                    currentPhase && (
-                      <Card className="border-primary">
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <Play className="w-5 h-5 text-primary" />
-                            {currentPhase.title}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="p-4 bg-primary/5 rounded-lg">
-                            <p className="text-lg">{currentPhase.prompt}</p>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={notes}
+            onChange={(e) => handleNotesChange(e.target.value)}
+            placeholder="What are you thinking about this problem? What have you learned so far?"
+            className="min-h-[300px]"
+          />
+                Concepts Discovered
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+              </CardTitle>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p>Key AI ethics concepts you've uncovered during your investigation. Click any concept to learn more and see related resources.</p>
+            </TooltipContent>
+          </Tooltip>
+          <CardDescription>
+            {currentProgress.discoveredConcepts.length} concepts found
+          </CardDescription>
+        </CardHeader>
+                      <CardContent>
+                        {currentProgress.discoveredConcepts.length === 0 ? (
+                          <div className="text-sm text-muted-foreground text-center py-4">
+                            <p>As you investigate, you'll discover key AI ethics concepts here.</p>
+                            <p className="text-xs mt-2">Click on concept badges in the investigate tab or ask the AI guide about concepts.</p>
                           </div>
-
-                          <div>
-                            <h4 className="font-semibold mb-2">
-                              Questions to Consider:
-                            </h4>
-                            <ul className="space-y-2">
-                              {currentPhase.questionsToConsider.map((q, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <ChevronRight className="w-4 h-4 mt-1 text-primary flex-shrink-0" />
-                                  <span className="text-sm">{q}</span>
-                                </li>
-                              ))}
-                            </ul>
+                        ) : (
+                          <div className="space-y-3">
+                            {Array.from(new Map(currentProgress.discoveredConcepts.map(d => [d.conceptId, d])).values()).map((discovery) => {
+                              const concept = getConceptById(discovery.conceptId);
+                              if (!concept) return null;
+                              return (
+                                <ConceptCard
+                                  key={discovery.conceptId}
+                                  concept={concept}
+                                  mastery={session.conceptMastery[discovery.conceptId] || 0}
+                                  compact
+                                />
+                              );
+                            })}
                           </div>
-
-                          {/* Concepts to Discover */}
-                          <div>
-                            <h4 className="font-semibold mb-2">
-                              Related Concepts:
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {currentPhase.revealsConcepts.map((conceptId) => {
-                                const concept = getConceptById(conceptId);
-                                const discovered = isConceptDiscovered(conceptId);
-                                return (
-                                  <Badge
-                                    key={conceptId}
-                                    variant={discovered ? "default" : "outline"}
-                                    className={`cursor-pointer ${discovered
-                                      ? "bg-green-500"
-                                      : "hover:bg-primary/10"
-                                      }`}
-                                    onClick={() =>
-                                      !discovered && handleConceptDiscover(conceptId)
-                                    }
-                                  >
-                                    {discovered && (
-                                      <CheckCircle className="w-3 h-3 mr-1" />
-                                    )}
-                                    {concept?.title || conceptId}
-                                  </Badge>
-                                );
-                              })}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-2">
-                              Click concepts as you learn about them
-                            </p>
-                          </div>
-
-                          <MasteryGate
-                            phasePrompt={currentPhase.prompt}
-                            requiredKeywords={currentPhase.revealsConcepts.map(c => getConceptById(c)?.title || c)} // Simple heuristic: require concept names
-                            onPass={handlePhaseComplete}
-                          />
-                        </CardContent>
-                      </Card>
-                    )
-                  }
-
-                  {/* All phases complete - go to reflection */}
-                  {
-                    !currentPhase && completedPhasesCount === problem.phases.length && (
-                      <Card className="border-green-500 bg-green-50 dark:bg-green-900/20">
-                        <CardContent className="pt-6 text-center space-y-4">
-                          <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-                          <h3 className="text-xl font-bold">
-                            Investigation Complete!
-                          </h3>
-                          <p className="text-muted-foreground">
-                            You've explored all phases. Now it's time to reflect on
-                            what you've learned and propose your solution.
-                          </p>
-                          <Button onClick={goToReflection} size="lg">
-                            Continue to Reflection
-                            <ArrowRight className="ml-2 w-4 h-4" />
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    )
-                  }
-                </TabsContent >
-
-                {/* Chat Tab */}
-                < TabsContent value="chat" >
-                  <SocraticChat
-                    problemId={problemId}
-                    phaseId={currentPhaseId || ""}
-                    discoveredConcepts={session.allDiscoveredConcepts}
-                    onConceptDiscover={handleConceptDiscover}
-                  />
-                </TabsContent >
-
-                {/* Notes Tab */}
-                < TabsContent value="notes" >
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Your Investigation Notes</CardTitle>
-                      <CardDescription>
-                        Write down your thoughts, questions, and findings
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Textarea
-                        value={notes}
-                        onChange={(e) => handleNotesChange(e.target.value)}
-                        placeholder="What are you thinking about this problem? What have you learned so far?"
-                        className="min-h-[300px]"
-                      />
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Your notes are saved automatically
-                      </p>
-                    </CardContent>
+                        )}
+                      </CardContent>
                   </Card>
-                </TabsContent >
-              </Tabs >
-            </div >
 
-            {/* Right Column - Concepts Discovered */}
-            < div className="space-y-4" >
-              <Card>
-                <CardHeader>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <CardTitle className="flex items-center gap-2 cursor-help">
-                        <Lightbulb className="w-5 h-5" />
-                        Concepts Discovered
-                        <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                      </CardTitle>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>Key AI ethics concepts you've uncovered during your investigation. Click any concept to learn more and see related resources.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <CardDescription>
-                    {currentProgress.discoveredConcepts.length} concepts found
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {currentProgress.discoveredConcepts.length === 0 ? (
-                    <div className="text-sm text-muted-foreground text-center py-4">
-                      <p>As you investigate, you'll discover key AI ethics concepts here.</p>
-                      <p className="text-xs mt-2">Click on concept badges in the investigate tab or ask the AI guide about concepts.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {currentProgress.discoveredConcepts.map((discovery) => {
-                        const concept = getConceptById(discovery.conceptId);
-                        if (!concept) return null;
-                        return (
-                          <ConceptCard
-                            key={discovery.conceptId}
-                            concept={concept}
-                            mastery={session.conceptMastery[discovery.conceptId] || 0}
-                            compact
-                          />
-                        );
-                      })}
-                    </div>
+                  {/* Hints (if stuck) */}
+                  {currentPhase && currentPhase.hints.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <CardTitle className="text-sm flex items-center gap-1 cursor-help">
+                              Need a hint?
+                              <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                            </CardTitle>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>If you're stuck, these hints can help guide your thinking without giving away the answer.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </CardHeader>
+                      <CardContent>
+                        <details className="cursor-pointer">
+                          <summary className="text-sm text-muted-foreground hover:text-foreground">
+                            Click to reveal a hint
+                          </summary>
+                          <ul className="mt-2 space-y-2">
+                            {currentPhase.hints.map((hint, i) => (
+                              <li
+                                key={i}
+                                className="text-sm p-2 bg-muted/50 rounded"
+                              >
+                                {hint}
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      </CardContent>
+                    </Card>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Hints (if stuck) */}
-              {
-                currentPhase && currentPhase.hints.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <CardTitle className="text-sm flex items-center gap-1 cursor-help">
-                            Need a hint?
-                            <HelpCircle className="w-3 h-3 text-muted-foreground" />
-                          </CardTitle>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>If you're stuck, these hints can help guide your thinking without giving away the answer.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </CardHeader>
-                    <CardContent>
-                      <details className="cursor-pointer">
-                        <summary className="text-sm text-muted-foreground hover:text-foreground">
-                          Click to reveal a hint
-                        </summary>
-                        <ul className="mt-2 space-y-2">
-                          {currentPhase.hints.map((hint, i) => (
-                            <li
-                              key={i}
-                              className="text-sm p-2 bg-muted/50 rounded"
-                            >
-                              {hint}
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
-                    </CardContent>
-                  </Card>
-                )
-              }
-            </div >
-          </div >
+                </div>
+            </div>
+          </div>
         </div >
 
-      </div>
-
-      {/* Explainability Sidebar for Stakeholder Trust */}
-      <ExplainabilitySidebar />
-    </TooltipProvider>
+        {/* Explainability Sidebar for Stakeholder Trust */}
+        < ExplainabilitySidebar />
+    </TooltipProvider >
   );
 }
