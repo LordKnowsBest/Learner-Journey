@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainCircuit, Target, Network, BarChart3, GraduationCap } from "lucide-react";
+import { BrainCircuit, Target, Network, BarChart3, GraduationCap, Code, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ export function AppHeader() {
     { href: "/problems", label: "Problems", icon: Target },
     { href: "/graph", label: "Concepts", icon: Network },
     { href: "/journey-summary", label: "Progress", icon: BarChart3 },
+    { href: "/settings", label: "Settings", icon: Settings },
     { href: "/teacher", label: "Teacher", icon: GraduationCap },
   ];
 

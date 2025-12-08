@@ -1,0 +1,14 @@
+src/app/investigate/[problemId]/page.tsx(393,54): error TS2339: Property 'guidingQuestion' does not exist on type 'InvestigationPhase'.
+src/app/investigate/[problemId]/page.tsx(395,49): error TS2339: Property 'activities' does not exist on type 'InvestigationPhase'.
+src/app/investigate/[problemId]/page.tsx(395,76): error TS2339: Property 'activities' does not exist on type 'InvestigationPhase'.
+src/app/investigate/[problemId]/page.tsx(399,55): error TS2339: Property 'activities' does not exist on type 'InvestigationPhase'.
+src/app/investigate/[problemId]/page.tsx(399,71): error TS7006: Parameter 'activity' implicitly has an 'any' type.
+src/app/investigate/[problemId]/page.tsx(399,81): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/app/investigate/[problemId]/page.tsx(419,21): error TS2322: Type '{ discoveredConcepts: ConceptDiscovery[]; onProceed: () => void; }' is not assignable to type 'IntrinsicAttributes & MasteryGateProps'.
+  Property 'discoveredConcepts' does not exist on type 'IntrinsicAttributes & MasteryGateProps'.
+src/components/ui/calendar.tsx(57,9): error TS2353: Object literal may only specify known properties, and 'IconLeft' does not exist in type 'Partial<CustomComponents>'.
+src/components/ui/calendar.tsx(57,22): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/components/ui/calendar.tsx(60,23): error TS7031: Binding element 'className' implicitly has an 'any' type.
+src/lib/llm-router.ts(175,46): error TS2307: Cannot find module 'openai' or its corresponding type declarations.
+src/lib/llm-router.ts(204,49): error TS2307: Cannot find module '@anthropic-ai/sdk' or its corresponding type declarations.
+src/lib/llm-router.ts(215,47): error TS7006: Parameter 'block' implicitly has an 'any' type.

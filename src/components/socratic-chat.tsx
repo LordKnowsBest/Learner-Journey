@@ -12,7 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { askSocraticTutor } from "@/ai/flows/ai-tutor-assistance";
+import { askSocraticTutor } from "@/ai/flows/ai-tutor-router";
 import { useExplainabilityOptional } from "@/context/ExplainabilityContext";
 import type { TutorMode } from "@/lib/types";
 import { Send, Bot, User, Lightbulb, HelpCircle, BookOpen, Zap } from "lucide-react";

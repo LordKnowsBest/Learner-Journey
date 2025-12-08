@@ -347,25 +347,23 @@ export default function InvestigatePage() {
                           return (
                             <div
                               key={phase.id}
-                              className={`p-3 rounded-lg border transition-all ${
-                                isActive
+                              className={`p-3 rounded-lg border transition-all ${isActive
                                   ? "border-primary bg-primary/5"
                                   : isCompleted
-                                  ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                                  : isLocked
-                                  ? "border-muted bg-muted/30 opacity-60"
-                                  : "border-muted"
-                              }`}
+                                    ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                                    : isLocked
+                                      ? "border-muted bg-muted/30 opacity-60"
+                                      : "border-muted"
+                                }`}
                             >
                               <div className="flex items-center gap-3">
                                 <div
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                                    isCompleted
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${isCompleted
                                       ? "bg-green-500 text-white"
                                       : isActive
-                                      ? "bg-primary text-primary-foreground"
-                                      : "bg-muted text-muted-foreground"
-                                  }`}
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted text-muted-foreground"
+                                    }`}
                                 >
                                   {isCompleted ? (
                                     <CheckCircle className="w-5 h-5" />
@@ -390,14 +388,14 @@ export default function InvestigatePage() {
                               {isActive && currentPhase && (
                                 <div className="mt-4 pt-4 border-t space-y-3">
                                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                                    <p>{currentPhase.guidingQuestion}</p>
+                                    <p>{currentPhase.prompt}</p>
                                   </div>
-                                  {currentPhase.activities && currentPhase.activities.length > 0 && (
+                                  {currentPhase.questionsToConsider && currentPhase.questionsToConsider.length > 0 && (
                                     <div className="space-y-2">
-                                      <p className="text-sm font-medium">Activities:</p>
+                                      <p className="text-sm font-medium">Questions to Consider:</p>
                                       <ul className="text-sm space-y-1 list-disc list-inside">
-                                        {currentPhase.activities.map((activity, i) => (
-                                          <li key={i}>{activity}</li>
+                                        {currentPhase.questionsToConsider.map((question, i) => (
+                                          <li key={i}>{question}</li>
                                         ))}
                                       </ul>
                                     </div>
@@ -416,8 +414,9 @@ export default function InvestigatePage() {
                   </Card>
 
                   <MasteryGate
-                    discoveredConcepts={currentProgress.discoveredConcepts}
-                    onProceed={goToReflection}
+                    phasePrompt="Summarize the key ethical concepts you have discovered during this investigation so far."
+                    requiredKeywords={currentProgress.discoveredConcepts.map(d => d.conceptId)}
+                    onPass={goToReflection}
                   />
                 </TabsContent>
 
@@ -499,48 +498,48 @@ export default function InvestigatePage() {
                 </CardContent>
               </Card>
 
-                  {/* Hints (if stuck) */}
-                  {currentPhase && currentPhase.hints.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <CardTitle className="text-sm flex items-center gap-1 cursor-help">
-                              Need a hint?
-                              <HelpCircle className="w-3 h-3 text-muted-foreground" />
-                            </CardTitle>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>If you're stuck, these hints can help guide your thinking without giving away the answer.</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </CardHeader>
-                      <CardContent>
-                        <details className="cursor-pointer">
-                          <summary className="text-sm text-muted-foreground hover:text-foreground">
-                            Click to reveal a hint
-                          </summary>
-                          <ul className="mt-2 space-y-2">
-                            {currentPhase.hints.map((hint, i) => (
-                              <li
-                                key={i}
-                                className="text-sm p-2 bg-muted/50 rounded"
-                              >
-                                {hint}
-                              </li>
-                            ))}
-                          </ul>
-                        </details>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
+              {/* Hints (if stuck) */}
+              {currentPhase && currentPhase.hints.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <CardTitle className="text-sm flex items-center gap-1 cursor-help">
+                          Need a hint?
+                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                        </CardTitle>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>If you're stuck, these hints can help guide your thinking without giving away the answer.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </CardHeader>
+                  <CardContent>
+                    <details className="cursor-pointer">
+                      <summary className="text-sm text-muted-foreground hover:text-foreground">
+                        Click to reveal a hint
+                      </summary>
+                      <ul className="mt-2 space-y-2">
+                        {currentPhase.hints.map((hint, i) => (
+                          <li
+                            key={i}
+                            className="text-sm p-2 bg-muted/50 rounded"
+                          >
+                            {hint}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
-        </div >
+        </div>
+      </div >
 
-        {/* Explainability Sidebar for Stakeholder Trust */}
-        < ExplainabilitySidebar />
+      {/* Explainability Sidebar for Stakeholder Trust */}
+      < ExplainabilitySidebar />
     </TooltipProvider >
   );
 }
