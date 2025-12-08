@@ -49,7 +49,6 @@ export default function InvestigatePage() {
     discoverConcept,
     updateInvestigationNotes,
     isConceptDiscovered,
-    startProblem,
   } = useSession();
 
   const {
@@ -319,6 +318,21 @@ export default function InvestigatePage() {
                             <TooltipContent className="max-w-xs">
                               <p>Think about: How might {stakeholder.name}'s interests conflict with others? What would be fair from their point of view?</p>
                             </TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Investigate Tab */}
+                <TabsContent value="investigate" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Investigation Phases</CardTitle>
+                      <CardDescription>
+                        Work through each phase to discover concepts
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
@@ -333,23 +347,25 @@ export default function InvestigatePage() {
                           return (
                             <div
                               key={phase.id}
-                              className={`p-3 rounded-lg border transition-all ${isActive
-                                ? "border-primary bg-primary/5"
-                                : isCompleted
+                              className={`p-3 rounded-lg border transition-all ${
+                                isActive
+                                  ? "border-primary bg-primary/5"
+                                  : isCompleted
                                   ? "border-green-500 bg-green-50 dark:bg-green-900/20"
                                   : isLocked
-                                    ? "border-muted bg-muted/30 opacity-60"
-                                    : "border-muted"
-                                }`}
+                                  ? "border-muted bg-muted/30 opacity-60"
+                                  : "border-muted"
+                              }`}
                             >
                               <div className="flex items-center gap-3">
                                 <div
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${isCompleted
-                                    ? "bg-green-500 text-white"
-                                    : isActive
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                    isCompleted
+                                      ? "bg-green-500 text-white"
+                                      : isActive
                                       ? "bg-primary text-primary-foreground"
                                       : "bg-muted text-muted-foreground"
-                                    }`}
+                                  }`}
                                 >
                                   {isCompleted ? (
                                     <CheckCircle className="w-5 h-5" />
@@ -369,50 +385,119 @@ export default function InvestigatePage() {
                                   <Badge className="bg-primary">Current</Badge>
                                 )}
                               </div>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            value={notes}
-            onChange={(e) => handleNotesChange(e.target.value)}
-            placeholder="What are you thinking about this problem? What have you learned so far?"
-            className="min-h-[300px]"
-          />
-                Concepts Discovered
-                <HelpCircle className="w-4 h-4 text-muted-foreground" />
-              </CardTitle>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p>Key AI ethics concepts you've uncovered during your investigation. Click any concept to learn more and see related resources.</p>
-            </TooltipContent>
-          </Tooltip>
-          <CardDescription>
-            {currentProgress.discoveredConcepts.length} concepts found
-          </CardDescription>
-        </CardHeader>
-                      <CardContent>
-                        {currentProgress.discoveredConcepts.length === 0 ? (
-                          <div className="text-sm text-muted-foreground text-center py-4">
-                            <p>As you investigate, you'll discover key AI ethics concepts here.</p>
-                            <p className="text-xs mt-2">Click on concept badges in the investigate tab or ask the AI guide about concepts.</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {Array.from(new Map(currentProgress.discoveredConcepts.map(d => [d.conceptId, d])).values()).map((discovery) => {
-                              const concept = getConceptById(discovery.conceptId);
-                              if (!concept) return null;
-                              return (
-                                <ConceptCard
-                                  key={discovery.conceptId}
-                                  concept={concept}
-                                  mastery={session.conceptMastery[discovery.conceptId] || 0}
-                                  compact
-                                />
-                              );
-                            })}
-                          </div>
-                        )}
-                      </CardContent>
+
+                              {/* Phase content */}
+                              {isActive && currentPhase && (
+                                <div className="mt-4 pt-4 border-t space-y-3">
+                                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                                    <p>{currentPhase.guidingQuestion}</p>
+                                  </div>
+                                  {currentPhase.activities && currentPhase.activities.length > 0 && (
+                                    <div className="space-y-2">
+                                      <p className="text-sm font-medium">Activities:</p>
+                                      <ul className="text-sm space-y-1 list-disc list-inside">
+                                        {currentPhase.activities.map((activity, i) => (
+                                          <li key={i}>{activity}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  <Button onClick={handlePhaseComplete} className="w-full">
+                                    Complete Phase
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
                   </Card>
+
+                  <MasteryGate
+                    discoveredConcepts={currentProgress.discoveredConcepts}
+                    onProceed={goToReflection}
+                  />
+                </TabsContent>
+
+                {/* Chat Tab */}
+                <TabsContent value="chat">
+                  <SocraticChat
+                    problemId={problemId}
+                    phaseId={currentPhaseId || ""}
+                    discoveredConcepts={currentProgress.discoveredConcepts.map(
+                      (d) => d.conceptId
+                    )}
+                    onConceptDiscover={handleConceptDiscover}
+                  />
+                </TabsContent>
+
+                {/* Notes Tab */}
+                <TabsContent value="notes">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Your Investigation Notes</CardTitle>
+                      <CardDescription>
+                        Document your thinking, questions, and discoveries
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        value={notes}
+                        onChange={(e) => handleNotesChange(e.target.value)}
+                        placeholder="What are you thinking about this problem? What have you learned so far?"
+                        className="min-h-[300px]"
+                      />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Right Column - Discovered Concepts */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <CardTitle className="flex items-center gap-2 cursor-help">
+                        Concepts Discovered
+                        <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                      </CardTitle>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Key AI ethics concepts you've uncovered during your investigation. Click any concept to learn more and see related resources.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <CardDescription>
+                    {currentProgress.discoveredConcepts.length} concepts found
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {currentProgress.discoveredConcepts.length === 0 ? (
+                    <div className="text-sm text-muted-foreground text-center py-4">
+                      <p>As you investigate, you'll discover key AI ethics concepts here.</p>
+                      <p className="text-xs mt-2">Click on concept badges in the investigate tab or ask the AI guide about concepts.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {Array.from(new Map(currentProgress.discoveredConcepts.map(d => [d.conceptId, d])).values()).map((discovery) => {
+                        const concept = getConceptById(discovery.conceptId);
+                        if (!concept) return null;
+                        return (
+                          <ConceptCard
+                            key={discovery.conceptId}
+                            concept={concept}
+                            mastery={session.conceptMastery[discovery.conceptId] || 0}
+                            compact
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
                   {/* Hints (if stuck) */}
                   {currentPhase && currentPhase.hints.length > 0 && (
