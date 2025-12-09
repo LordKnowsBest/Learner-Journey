@@ -2,15 +2,18 @@
 
 import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import type {
+import {
   PBLSessionState,
   ProblemProgress,
   PhaseProgress,
   ConceptDiscovery,
   ReflectionResponse,
   SessionState,
+  LearningPath,
+  KnowledgeNode,
 } from '@/lib/types';
 import { getProblemById } from '@/lib/data';
+import { PathRouter } from '@/lib/engines/PathRouter';
 
 // ============================================
 // INITIAL STATE
@@ -23,6 +26,9 @@ const initialPBLState: PBLSessionState = {
   conceptMastery: {},
   totalLearningTime: 0,
   sessionStartedAt: null,
+  // Graph-Based Path
+  currentPath: null,
+  nextRecommendedNode: null,
 };
 
 // Legacy state for backward compatibility
@@ -88,6 +94,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<PBLSessionState>(initialPBLState);
   const [legacySession, setLegacySession] = useState<SessionState>(initialLegacyState);
   const router = useRouter();
+
+  // Initialize Routing Engine
+  const pathRouter = React.useMemo(() => new PathRouter(), []);
+
+  // Compute initial path on mount (or if empty)
+  React.useEffect(() => {
+    async function initPath() {
+      if (!session.currentPath) {
+        // For MVP, using a dummy student ID 'demo-student'
+        const path = await pathRouter.computeOptimalPath('demo-student');
+        const nextNode = pathRouter.getNextNode(path);
+        setSession(prev => ({
+          ...prev,
+          currentPath: path,
+          nextRecommendedNode: nextNode
+        }));
+      }
+    }
+    initPath();
+  }, [session.currentPath, pathRouter]);
+
+
 
   // ---------- Problem Management ----------
 

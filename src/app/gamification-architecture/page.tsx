@@ -40,16 +40,22 @@ import {
     Activity,
     Flame,
 } from "lucide-react";
-import { useGamification, BADGES } from "@/context/GamificationContext";
+import { useGamification } from "@/context/GamificationContext";
 
 export default function GamificationArchitecturePage() {
-    const { state, addXP, incrementStreak } = useGamification();
+    const { student, addXP, incrementStreak, badges } = useGamification();
     const [activeRole, setActiveRole] = useState("student");
     const [simulatedXP, setSimulatedXP] = useState(0);
 
     // Calculate progress to next level
-    const xpForNextLevel = 100; // Based on GamificationContext logic: Math.floor(xp / 100) + 1
-    const currentLevelProgress = state.xp % xpForNextLevel;
+    // MVP: Simplistic visualization based on mock provider thresholds
+    const thresholds = [0, 100, 300, 600, 1000, 1500, 2200, 3000, 4000, 5500, 7500, 10000];
+    const currentThreshold = thresholds[student.level - 1] || 0;
+    const nextThreshold = thresholds[student.level] || (currentThreshold + 1000);
+
+    const xpInLevel = student.totalXP - currentThreshold;
+    const xpForLevel = nextThreshold - currentThreshold;
+    const currentLevelProgress = xpInLevel;
 
     const handleSimulateAction = (amount: number, reason: string) => {
         addXP(amount, reason);
@@ -80,21 +86,21 @@ export default function GamificationArchitecturePage() {
                         <div className="p-4 rounded-lg bg-background border shadow-sm">
                             <div className="text-sm text-muted-foreground">Current Level</div>
                             <div className="text-2xl font-bold flex items-center gap-2">
-                                Level {state.level}
+                                {student.level}
                                 <Badge variant="secondary" className="text-xs">
-                                    {state.xp} Total XP
+                                    {student.totalXP} Total XP
                                 </Badge>
                             </div>
-                            <Progress value={currentLevelProgress} className="h-2 mt-2" />
+                            <Progress value={(xpInLevel / xpForLevel) * 100} className="h-2 mt-2" />
                             <p className="text-xs text-muted-foreground mt-1">
-                                {currentLevelProgress} / {xpForNextLevel} XP to Level {state.level + 1}
+                                {xpInLevel} / {xpForLevel} XP to Level {student.level + 1}
                             </p>
                         </div>
                         <div className="p-4 rounded-lg bg-background border shadow-sm">
                             <div className="text-sm text-muted-foreground">Streak</div>
                             <div className="text-2xl font-bold flex items-center gap-2">
-                                {state.currentStreak} Days
-                                <Flame className={`w-5 h-5 ${state.currentStreak > 0 ? "text-orange-500 fill-orange-500" : "text-gray-300"}`} />
+                                {student.currentStreak} Days
+                                <Flame className={`w-5 h-5 ${student.currentStreak > 0 ? "text-orange-500 fill-orange-500" : "text-gray-300"}`} />
                             </div>
                             <Button
                                 variant="outline"
@@ -108,19 +114,24 @@ export default function GamificationArchitecturePage() {
                         <div className="p-4 rounded-lg bg-background border shadow-sm">
                             <div className="text-sm text-muted-foreground">Badges Earned</div>
                             <div className="text-2xl font-bold">
-                                {state.achievements.length} / {Object.keys(BADGES).length}
+                                {student.unlockedBadges.length} / {badges.length}
                             </div>
                             <div className="flex -space-x-2 mt-2 overflow-hidden">
-                                {state.achievements.length > 0 ? (
-                                    state.achievements.map((a) => (
-                                        <div
-                                            key={a.id}
-                                            className="w-6 h-6 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center text-xs"
-                                            title={BADGES[a.badgeId]?.name}
-                                        >
-                                            {BADGES[a.badgeId]?.icon}
-                                        </div>
-                                    ))
+                                {student.unlockedBadges.length > 0 ? (
+                                    student.unlockedBadges.map((badgeId) => {
+                                        const b = badges.find(bg => bg.id === badgeId);
+                                        if (!b) return null;
+                                        return (
+                                            <div
+                                                key={badgeId}
+                                                className="w-6 h-6 rounded-full bg-primary/10 border-2 border-background flex items-center justify-center text-xs"
+                                                title={b.name}
+                                            >
+                                                {/* Fallback for icon if it's a string emoji vs lucide icon, mock data uses emoji string in iconUrl */}
+                                                {(b as any).iconUrl || "🏆"}
+                                            </div>
+                                        );
+                                    })
                                 ) : (
                                     <span className="text-xs text-muted-foreground ml-2">No badges yet</span>
                                 )}
@@ -176,7 +187,7 @@ export default function GamificationArchitecturePage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => handleSimulateAction(100, "Phase Complete")}
+                                                    onClick={() => handleSimulateAction(100, "phase_complete")}
                                                 >
                                                     Simulate
                                                 </Button>
@@ -191,7 +202,7 @@ export default function GamificationArchitecturePage() {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => handleSimulateAction(50, "Deep Reasoning")}
+                                                    onClick={() => handleSimulateAction(50, "deep_reasoning")}
                                                 >
                                                     Simulate
                                                 </Button>
@@ -223,12 +234,12 @@ export default function GamificationArchitecturePage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-2 gap-4">
-                                    {Object.values(BADGES).map((badge) => (
+                                    {badges.map((badge) => (
                                         <TooltipProvider key={badge.id}>
                                             <Tooltip>
                                                 <TooltipTrigger asChild>
                                                     <div className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-help transition-colors">
-                                                        <div className="text-2xl">{badge.icon}</div>
+                                                        <div className="text-2xl">{(badge as any).iconUrl || "🏅"}</div>
                                                         <div className="text-left">
                                                             <div className="font-semibold text-sm">{badge.name}</div>
                                                             <Badge variant="secondary" className="text-[10px] h-5">
@@ -311,7 +322,8 @@ export default function GamificationArchitecturePage() {
                         <CardContent className="space-y-4">
                             <div className="bg-muted/50 p-4 rounded-lg font-mono text-sm space-y-2">
                                 <p className="text-muted-foreground">// Level Calculation</p>
-                                <p className="text-foreground">Level = floor(XP / 100) + 1</p>
+                                <p className="text-foreground">Level is determined by non-linear XP thresholds:</p>
+                                <p className="text-foreground text-xs">[0, 100, 300, 600, 1000, 1500, 2200, 3000, ...]</p>
 
                                 <p className="text-muted-foreground mt-4">// Streak Logic</p>
                                 <p className="text-foreground">If (LastActivity == Yesterday) Streak++</p>
@@ -327,15 +339,16 @@ export default function GamificationArchitecturePage() {
                                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
                                         <li><strong>Intrinsic First:</strong> Visuals are minimal to avoid distracting from content.</li>
                                         <li><strong>Competence focused:</strong> Badges celebrate skills, not just time spent.</li>
-                                        <li><strong>No Leaderboards:</strong> Avoids demotivating struggling students.</li>
+                                        <li><strong>Class Leaderboard:</strong> Healthy competition with option to opt-out.</li>
                                     </ul>
                                 </div>
                                 <div className="border p-4 rounded-lg">
                                     <h4 className="font-semibold mb-2">Future Roadmap</h4>
                                     <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                                        <li>Class-wide challenges (cooperative)</li>
-                                        <li>Hidden "Easter Egg" badges for curiosity</li>
-                                        <li>Customizable avatar accessories based on level</li>
+                                        <li>Streak Protection Tokens</li>
+                                        <li>Multi-scope Leaderboards</li>
+                                        <li>Collaborative Raid Events</li>
+                                        <li>Advanced XP Decay Algorithms</li>
                                     </ul>
                                 </div>
                             </div>

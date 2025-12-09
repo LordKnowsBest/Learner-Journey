@@ -15,7 +15,9 @@
       "Bash(npx kill-port:*)",
       "Bash(git commit:*)",
       "Bash(npm install:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git push:*)",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []

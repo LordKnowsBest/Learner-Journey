@@ -17,6 +17,7 @@ import {
 import { getProblemById, getConceptById } from "@/lib/data";
 import { useSession } from "@/context/SessionContext";
 import { useExplainability } from "@/context/ExplainabilityContext";
+import { useGamification } from "@/context/GamificationContext";
 import { SocraticChat } from "@/components/socratic-chat";
 import { ConceptCard } from "@/components/concept-card";
 import { ExplainabilitySidebar, ExplainabilityToggle } from "@/components/explainability-sidebar";
@@ -58,9 +59,13 @@ export default function InvestigatePage() {
     updatePathExplanation,
   } = useExplainability();
 
+  const { addXP } = useGamification();
+
   const [problem, setProblem] = useState<ProblemScenario | null>(null);
   const [activeTab, setActiveTab] = useState("scenario");
   const [notes, setNotes] = useState("");
+  const [showLesson, setShowLesson] = useState(false);
+  const [lessonConcepts, setLessonConcepts] = useState<string[]>([]);
 
   useEffect(() => {
     const p = getProblemById(problemId);
@@ -123,6 +128,12 @@ export default function InvestigatePage() {
           const concept = getConceptById(conceptId);
           discoverConcept(conceptId, currentPhaseId);
 
+          if (concept) {
+            // Award XP for discovery using the defined weight
+            const xp = concept.xpValue || 50;
+            addXP(xp, `Discovered concept: ${concept.title}`);
+          }
+
           // Log to explainability
           logConceptRevealed({
             conceptId,
@@ -146,6 +157,10 @@ export default function InvestigatePage() {
       });
 
       completePhase(currentPhaseId);
+
+      // Trigger Lesson Path
+      setLessonConcepts(currentPhase.revealsConcepts);
+      setShowLesson(true);
     }
   };
 
@@ -184,7 +199,15 @@ export default function InvestigatePage() {
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold">{problem.title}</h1>
+              <div className="flex items-center gap-2 mb-2">
+                <h1 className="text-2xl font-bold">{problem.title}</h1>
+                {session.nextRecommendedNode?.relatedScenarioId === problemId && (
+                  <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+                    <Lightbulb className="w-3 h-3 mr-1" />
+                    Recommended Next Step
+                  </Badge>
+                )}
+              </div>
               <p className="text-muted-foreground">{problem.hook}</p>
             </div>
             <div className="flex items-start gap-4">
@@ -209,6 +232,25 @@ export default function InvestigatePage() {
               </Tooltip>
             </div>
           </div>
+
+          {/* Path Context Banner */}
+          {session.currentPath && (
+            <Card className="bg-muted/30 border-dashed">
+              <CardContent className="py-3 flex items-center gap-4">
+                <div className="p-2 bg-background rounded-full border">
+                  <ArrowRight className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Your Adaptive Learning Path</p>
+                  <p className="text-xs text-muted-foreground">
+                    Current Focus: <span className="font-semibold text-primary">{session.nextRecommendedNode?.title || "Evaluating Priorities"}</span>
+                    {' '}&bull;{' '}
+                    {session.currentPath.pathEfficiency}% Efficiency
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -348,21 +390,21 @@ export default function InvestigatePage() {
                             <div
                               key={phase.id}
                               className={`p-3 rounded-lg border transition-all ${isActive
-                                  ? "border-primary bg-primary/5"
-                                  : isCompleted
-                                    ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                                    : isLocked
-                                      ? "border-muted bg-muted/30 opacity-60"
-                                      : "border-muted"
+                                ? "border-primary bg-primary/5"
+                                : isCompleted
+                                  ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                                  : isLocked
+                                    ? "border-muted bg-muted/30 opacity-60"
+                                    : "border-muted"
                                 }`}
                             >
                               <div className="flex items-center gap-3">
                                 <div
                                   className={`w-8 h-8 rounded-full flex items-center justify-center ${isCompleted
-                                      ? "bg-green-500 text-white"
-                                      : isActive
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-muted text-muted-foreground"
+                                    ? "bg-green-500 text-white"
+                                    : isActive
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted text-muted-foreground"
                                     }`}
                                 >
                                   {isCompleted ? (
@@ -540,6 +582,52 @@ export default function InvestigatePage() {
 
       {/* Explainability Sidebar for Stakeholder Trust */}
       < ExplainabilitySidebar />
+
+      {/* Lesson Path Modal */}
+      {showLesson && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl border-primary/20">
+            <CardHeader className="bg-primary/5 border-b">
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" />
+                Investigation Complete! Time to Learn.
+              </CardTitle>
+              <CardDescription>
+                You've uncovered key concepts. Master them now to advance your journey.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                {lessonConcepts.map(conceptId => {
+                  const concept = getConceptById(conceptId);
+                  if (!concept) return null;
+                  return (
+                    <div key={conceptId} className="group relative">
+                      <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
+                      <ConceptCard
+                        concept={concept}
+                        mastery={session.conceptMastery[conceptId] || 0}
+                      />
+                      <div className="absolute top-2 right-2">
+                        <Badge variant="secondary" className="shadow-sm">
+                          +{concept.xpValue} XP
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <Button size="lg" onClick={() => setShowLesson(false)}>
+                  Continue to Next Phase
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </TooltipProvider >
   );
 }

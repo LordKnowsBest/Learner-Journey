@@ -21,6 +21,7 @@ export type ConceptResource = {
   // Guiding questions to prompt exploration
   guidingQuestions: string[];
   category: string;
+  xpValue: number;
 };
 
 // ---------- Problem Scenario Types ----------
@@ -79,6 +80,72 @@ export type ProblemScenario = {
   tags: string[];
 };
 
+// ---------- Graph Architecture Types ----------
+
+export enum NodeCategory {
+  AI_FUNDAMENTALS = "ai_fundamentals",
+  MACHINE_LEARNING_DATA = "machine_learning_data",
+  ETHICS_BIAS_SOCIETY = "ethics_bias_society",
+  AI_CAREERS_INDUSTRY = "ai_careers_industry",
+  AI_LITERACY_SKILLS = "ai_literacy_skills",
+  AI_SYSTEM_DESIGN = "ai_system_design"
+}
+
+export enum DifficultyLevel {
+  BEGINNER = "beginner",
+  INTERMEDIATE = "intermediate",
+  ADVANCED = "advanced",
+  CHALLENGE = "challenge"
+}
+
+export type KnowledgeNode = {
+  nodeId: string;
+  title: string;
+  description: string;
+  category: NodeCategory;
+  difficulty: DifficultyLevel;
+  gradeLevel: number[];
+  prerequisites: string[]; // Node IDs
+  relatedNodes: string[];
+  ethicsConnections: string[];
+  estimatedMinutes: number;
+  masteryThreshold: number; // 0-100
+  // Mapping to PBL Content
+  relatedScenarioId?: string;
+  relatedPhaseId?: string;
+};
+
+export enum EdgeRelationship {
+  REQUIRES_UNDERSTANDING_OF = "requires_understanding_of",
+  IS_A_TYPE_OF = "is_a_type_of",
+  IS_RELATED_TO = "is_related_to",
+  HAS_ETHICAL_IMPLICATIONS = "has_ethical_implications",
+  IS_USED_IN = "is_used_in",
+  BUILDS_UPON = "builds_upon"
+}
+
+export type KnowledgeEdge = {
+  edgeId: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+  relationshipType: EdgeRelationship;
+  weight: number;
+  isRequired: boolean;
+};
+
+export type LearningPath = {
+  pathId: string;
+  studentId: string;
+  nodeSequence: string[]; // Ordered Node IDs
+  currentPosition: number;
+  completedNodes: string[];
+  skippedNodes: string[];
+  injectedRemedialNodes: string[];
+  pathEfficiency: number;
+  createdAt: Date;
+  lastModified: Date;
+};
+
 // ---------- Session & Progress Types ----------
 
 export type ConceptDiscovery = {
@@ -133,6 +200,9 @@ export type PBLSessionState = {
   totalLearningTime: number;
   // Session start time
   sessionStartedAt: Date | null;
+  // Graph-Based Path
+  currentPath: LearningPath | null;
+  nextRecommendedNode: KnowledgeNode | null;
 };
 
 // ---------- AI Tutor Types ----------
@@ -178,20 +248,7 @@ export type QuizQuestion = {
   explanation: string;
 };
 
-export type KnowledgeNode = {
-  id: string;
-  title: string;
-  description: string;
-  order: number;
-  videoUrl: string;
-  videoTitle: string;
-  videoDuration: number;
-  articleUrl: string;
-  articleTitle: string;
-  quiz: QuizQuestion[];
-  prerequisites: string[];
-  category: string;
-};
+// [Removed Legacy KnowledgeNode definition to avoid conflict with new Graph Architecture]
 
 export type AssessmentQuestion = {
   id: string;

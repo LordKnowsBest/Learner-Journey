@@ -12,6 +12,120 @@ import type {
 // ============================================
 
 export const conceptResources: ConceptResource[] = [
+  // New Graph-Compatible Concepts
+  {
+    id: 'ai_intro_001',
+    title: 'Introduction to Artificial Intelligence',
+    description: 'Understanding what AI is, how it differs from traditional software, and its basic types.',
+    videoUrl: 'https://www.youtube.com/embed/ad79nYk2keg',
+    videoTitle: 'AI for Everyone',
+    videoDuration: 300,
+    articleUrl: 'https://www.ibm.com/topics/artificial-intelligence',
+    articleTitle: 'What is Artificial Intelligence?',
+    keyInsights: [
+      'AI allows computers to learn from experience',
+      'Narrow AI vs. General AI',
+      'Machine Learning is a subset of AI',
+      'AI is already all around us (phones, recommendations)'
+    ],
+    relatedConcepts: ['ml_basics_001', 'data_basics_001'],
+    guidingQuestions: [
+      'Is a calculator considered AI? Why or why not?',
+      'What is the difference between a rule-based system and a learning system?'
+    ],
+    category: 'AI Fundamentals',
+    xpValue: 100
+  },
+  {
+    id: 'data_basics_001',
+    title: 'Data: The Fuel of AI',
+    description: 'Why data is essential for modern AI and how it is collected and processed.',
+    videoUrl: 'https://www.youtube.com/embed/yubzJw0uiE4',
+    videoTitle: 'Data Science for Beginners',
+    videoDuration: 240,
+    articleUrl: 'https://royalsociety.org/topics-policy/projects/machine-learning/',
+    articleTitle: 'Machine Learning and Data',
+    keyInsights: [
+      'Garbage In, Garbage Out',
+      'Training Data vs. Testing Data',
+      'Data labeling is often done by humans',
+      'Structured vs. Unstructured Data'
+    ],
+    relatedConcepts: ['privacy', 'bias_intro_001'],
+    guidingQuestions: [
+      'Where does the data to train "SmartLearn AI" come from?',
+      'Does more data always mean better AI?'
+    ],
+    category: 'Data Literacy',
+    xpValue: 120
+  },
+  {
+    id: 'ml_basics_001',
+    title: 'Machine Learning Basics',
+    description: 'How computers find patterns in data without being explicitly programmed.',
+    videoUrl: 'https://www.youtube.com/embed/UKy3vcvFVdE',
+    videoTitle: 'Machine Learning Explained',
+    videoDuration: 360,
+    articleUrl: 'https://mitsloan.mit.edu/ideas-made-to-matter/machine-learning-explained',
+    articleTitle: 'Machine Learning Explained',
+    keyInsights: [
+      'Supervised vs. Unsupervised Learning',
+      'The role of algorithms in finding patterns',
+      'Overfitting: When memorization mimics learning'
+    ],
+    relatedConcepts: ['algo_thinking_001', 'bias_intro_001'],
+    guidingQuestions: [
+      'How does Netflix know what you want to watch?',
+      'What happens if the patterns in the past don\'t match the future?'
+    ],
+    category: 'AI Fundamentals',
+    xpValue: 200
+  },
+  {
+    id: 'bias_intro_001',
+    title: 'Introduction to Bias',
+    description: 'Understanding how human prejudices can creep into machine logic.',
+    videoUrl: 'https://www.youtube.com/embed/59bMh59JQDo',
+    videoTitle: 'Algorithmic Bias and Fairness',
+    videoDuration: 400,
+    articleUrl: 'https://www.propublica.org/article/machine-bias-risk-assessments-in-criminal-sentencing',
+    articleTitle: 'Machine Bias',
+    keyInsights: [
+      'Bias in training data leads to biased models',
+      'Proxy variables (e.g. zip code for race)',
+      'Feedback loops amplify existing bias'
+    ],
+    relatedConcepts: ['fairness', 'ethics_bias_society'],
+    guidingQuestions: [
+      'Can an algorithm be racist?',
+      'How do we fix a biased dataset?'
+    ],
+    category: 'Ethics & Society',
+    xpValue: 250
+  },
+  {
+    id: 'algo_thinking_001',
+    title: 'Algorithmic Thinking',
+    description: 'Designing clear steps and rules to solve problems and govern AI.',
+    videoUrl: 'https://www.youtube.com/embed/8pm4j4z-uYk',
+    videoTitle: 'Algorithmic Thinking',
+    videoDuration: 180,
+    articleUrl: 'https://www.cs.cmu.edu/~15110/content/notes/computational_thinking.pdf',
+    articleTitle: 'Computational Thinking',
+    keyInsights: [
+      'Decomposition: Breaking problems down',
+      'Pattern Recognition',
+      'Abstraction: Ignoring irrelevant details',
+      'Algorithm Design: Creating the recipe'
+    ],
+    relatedConcepts: ['human_oversight'],
+    guidingQuestions: [
+      'What "Algorithm" should the school board use to decide on the AI?',
+      'How do you debug a social process?'
+    ],
+    category: 'Skills',
+    xpValue: 150
+  },
   {
     id: 'privacy',
     title: 'Privacy & Personal Data',
@@ -34,6 +148,7 @@ export const conceptResources: ConceptResource[] = [
       'Who should have access to your personal information?',
     ],
     category: 'Foundations',
+    xpValue: 100,
   },
   {
     id: 'data_collection',
@@ -57,6 +172,7 @@ export const conceptResources: ConceptResource[] = [
       'How can you find out what data an app collects?',
     ],
     category: 'Foundations',
+    xpValue: 100,
   },
   {
     id: 'consent',
@@ -80,6 +196,7 @@ export const conceptResources: ConceptResource[] = [
       'Should consent rules be different for young people?',
     ],
     category: 'Foundations',
+    xpValue: 150,
   },
   {
     id: 'algorithmic_bias',
@@ -103,6 +220,7 @@ export const conceptResources: ConceptResource[] = [
       'Who is responsible when an AI makes a biased decision?',
     ],
     category: 'AI & Society',
+    xpValue: 200,
   },
   {
     id: 'ai_decisions',
@@ -126,6 +244,7 @@ export const conceptResources: ConceptResource[] = [
       'How is AI decision-making different from human decision-making?',
     ],
     category: 'AI & Society',
+    xpValue: 200,
   },
   {
     id: 'fairness',
@@ -149,6 +268,7 @@ export const conceptResources: ConceptResource[] = [
       'Can an AI be fair to everyone at the same time?',
     ],
     category: 'AI & Society',
+    xpValue: 250,
   },
   {
     id: 'transparency',
@@ -172,6 +292,7 @@ export const conceptResources: ConceptResource[] = [
       'What should companies be required to disclose about their AI?',
     ],
     category: 'Advanced Topics',
+    xpValue: 300,
   },
   {
     id: 'misinformation',
@@ -195,6 +316,7 @@ export const conceptResources: ConceptResource[] = [
       'How might AI be used to fight misinformation?',
     ],
     category: 'Advanced Topics',
+    xpValue: 200,
   },
   {
     id: 'human_oversight',
@@ -218,6 +340,7 @@ export const conceptResources: ConceptResource[] = [
       'When might human oversight slow down important processes?',
     ],
     category: 'Advanced Topics',
+    xpValue: 300,
   },
 ];
 
@@ -350,68 +473,85 @@ Your task: Investigate whether Lincoln Middle School should adopt SmartLearn AI,
       },
     ],
     phases: [
+
       {
         id: 'phase_1_understand',
-        title: 'Understanding the Problem',
-        description: 'What exactly is being proposed and why does it matter?',
-        prompt: 'Before you can evaluate SmartLearn AI, you need to understand what it does and what concerns have been raised. What questions do you have about this situation?',
-        revealsConcepts: ['privacy', 'data_collection'],
+        title: 'Orientation: The AI Proposal',
+        description: 'Analyze the proposal and identify the core "Need to Know" questions.',
+        prompt: `**Driving Question:** How can we ensure the "SmartLearn AI" system affects all Lincoln Middle School students fairly?
+
+Your first task is to break down the Principal's proposal. To do this, you need to conduct a "Premortem": imagine it is one year later and the AI launch was a disaster. What likely went wrong?
+
+Use the "Need to Know" board to list the technical questions (how does it work?) and ethical questions (is it right?) you must answer before making a decision.`,
+        revealsConcepts: ['ai_intro_001'], // Links to Graph Node
         questionsToConsider: [
-          'What data would the AI collect about students?',
-          'Who would have access to this data?',
-          'How would the AI make its predictions?',
+          'What specific problem is the Principal trying to solve?',
+          'If the AI "predicts failure," how might that label affect a student\'s confidence?',
+          'What meaningful difference is there between a human tutor and an AI tutor?'
         ],
         hints: [
-          'Think about what "tracking learning patterns" actually means',
-          'Consider what information the AI would need to make predictions',
+          'Review the concept of "Technological Determinism" - is technology always the solution?',
+          'Think about who benefits most from this efficiency.'
         ],
       },
       {
         id: 'phase_2_privacy',
-        title: 'The Privacy Question',
-        description: 'Investigating concerns about student data and privacy.',
-        prompt: 'Aisha feels uncomfortable with the AI tracking everything. Is this a valid concern? What privacy issues might exist with this system?',
-        revealsConcepts: ['privacy', 'data_collection', 'consent'],
+        title: 'Investigation: Data & Privacy',
+        description: 'Audit the data collection practices proposed by the AI vendor.',
+        prompt: `You have obtained the vendor's technical sell-sheet. It states: "We collect behavioral metrics, cursor movement patterns, and quiz timestamps to optimize engagement."
+
+Aisha (8th grader) is uncomfortable. Your task is to audit this data policy. 
+
+Does collecting "cursor movement" cross a line? Differentiate between "Learning Data" (grades) and "Behavioral Data" (surveillance). Determine what data is strictly necessary.`,
+        revealsConcepts: ['data_basics_001', 'privacy'],
         questionsToConsider: [
-          'What personal information would students be sharing?',
-          'Do students have a choice about participating?',
-          'What could happen if this data was misused or leaked?',
+          'Why would an AI need to track cursor movements?',
+          'Can data collected for one purpose (helping learn) be used for another (discipline)?',
+          'What happens to this data after the student graduates?'
         ],
         hints: [
-          'Think about your own digital footprint',
-          'Consider who might want access to student performance data',
+          'Look up "Data Minimization" principles.',
+          'Consider the risk of data leaks.'
         ],
       },
       {
         id: 'phase_3_fairness',
-        title: 'The Fairness Question',
-        description: 'Investigating whether the AI would treat all students fairly.',
-        prompt: 'Mr. Chen is worried the AI was trained on data from different schools. Could this cause problems? How might bias affect students?',
-        revealsConcepts: ['algorithmic_bias', 'fairness', 'ai_decisions'],
+        title: 'Investigation: Bias & Training',
+        description: 'Analyze the AI\'s training data for potential bias.',
+        prompt: `Mr. Chen has discovered that SmartLearn AI was trained primarily on data from private schools in Silicon Valley. Lincoln Middle School is a diverse public school in Chicago.
+
+Run a mental simulation: If the AI learns that "successful students" usually take expensive coding camps (a feature of the training set), how will it rate a student who cannot afford those camps?
+
+Your task is to identify "Proxy Variables" - data points that might accidentally stand in for race or income.`,
+        revealsConcepts: ['ml_basics_001', 'bias_intro_001', 'algorithmic_bias', 'fairness'],
         questionsToConsider: [
-          'What if students at Lincoln learn differently than students in the training data?',
-          'Could the AI unfairly label some students as "at risk"?',
-          'How would you test if the AI is fair to all groups?',
+          'If the training data does not look like the real users, what errors will happen?',
+          'Could "zip code" be a proxy for "race" in this context?',
+          'How would you test this AI for bias before buying it?'
         ],
         hints: [
-          'Think about how AI learns patterns from examples',
-          'Consider what happens when training data does not match real users',
+          'Review the concept of "Training Data Match".',
+          'Think about "correlated variables".'
         ],
       },
       {
         id: 'phase_4_oversight',
-        title: 'The Human Factor',
-        description: 'Exploring the role of teachers and parents in AI decisions.',
-        prompt: 'Mrs. Rodriguez does not want a computer deciding her daughter\'s future. What role should humans play when AI makes recommendations about students?',
-        revealsConcepts: ['human_oversight', 'transparency', 'ai_decisions'],
+        title: 'Conclusion: Designing Oversight',
+        description: 'Propose the human-in-the-loop governance structure.',
+        prompt: `You are now drafting the "Usage Policy" for the School Board. 
+
+Mrs. Rodriguez demands that no computer should fail a student without a teacher's review. The company argues this slows down the "real-time adaptation."
+
+Design the "Human-in-the-Loop" protocol. When must a human intervene? When is it okay for the AI to auto-act? Define the "Red Lines" the AI cannot cross.`,
+        revealsConcepts: ['algo_thinking_001', 'human_oversight', 'transparency'],
         questionsToConsider: [
-          'Should teachers be able to override AI recommendations?',
-          'How can parents understand and challenge AI decisions?',
-          'What decisions should never be made by AI alone?',
+          'Which decisions are "High Stakes" and require a human?',
+          'If a teacher disagrees with the AI, who wins?',
+          'How will students know when they are interacting with the AI?'
         ],
         hints: [
-          'Think about high-stakes decisions in education',
-          'Consider how to balance AI efficiency with human judgment',
+          'Think about an appeals process.',
+          'Consider the "Automation Bias" - humans tending to trust computers too much.'
         ],
       },
     ],

@@ -1,108 +1,121 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { getDataProvider } from '@/lib/gamification/data/DataProviderFactory';
+import { XPEngine } from '@/lib/gamification/engines/XPEngine';
+import { BadgeEngine } from '@/lib/gamification/engines/BadgeEngine';
+import { StudentGamification, Badge } from '@/lib/gamification/types';
+import { MOCK_BADGES } from '@/lib/gamification/data/mockData';
 
-// ============================================
-// TYPES
-// ============================================
-
-export interface Badge {
-    id: string;
-    name: string;
-    description: string;
-    icon: string; // Lucide icon name or emoji
-    category: 'mastery' | 'streak' | 'explorer';
-}
-
-export interface Achievement {
-    id: string;
-    badgeId: string;
-    unlockedAt: Date;
-}
-
-export interface GamificationState {
-    xp: number;
-    level: number;
-    currentStreak: number;
-    lastActivityDate: Date | null;
-    achievements: Achievement[];
-}
+// Re-export Badge type
+export type { Badge };
 
 export interface GamificationContextType {
-    state: GamificationState;
+    student: StudentGamification;
+    badges: Badge[];
+    loading: boolean;
     addXP: (amount: number, reason: string) => void;
     unlockBadge: (badgeId: string) => void;
     incrementStreak: () => void;
+    refresh: () => Promise<void>;
 }
 
-// ============================================
-// INITIAL STATE & DATA
-// ============================================
-
-export const BADGES: Record<string, Badge> = {
-    'first_step': { id: 'first_step', name: 'First Step', description: 'Complete your first investigation phase.', icon: '👣', category: 'explorer' },
-    'on_fire': { id: 'on_fire', name: 'On Fire', description: 'Maintain a 3-day streak.', icon: '🔥', category: 'streak' },
-    'ethics_scholar': { id: 'ethics_scholar', name: 'Ethics Scholar', description: 'Discover 5 concepts.', icon: '🎓', category: 'mastery' },
-    'privacy_guardian': { id: 'privacy_guardian', name: 'Privacy Guardian', description: 'demonstrate mastery in Privacy.', icon: '🛡️', category: 'mastery' },
-};
-
-const initialState: GamificationState = {
-    xp: 0,
+// Default state for initial render
+const defaultStudent: StudentGamification = {
+    studentId: 'loading',
+    totalXP: 0,
     level: 1,
+    levelTitle: 'Novice',
     currentStreak: 0,
-    lastActivityDate: null,
-    achievements: [],
+    longestStreak: 0,
+    lastActiveDate: null,
+    streakProtectionTokens: 0,
+    unlockedBadges: [],
+    badgeProgress: {},
+    activeQuests: [],
+    completedQuests: [],
+    questProgress: {},
+    leaderboardOptIn: false,
+    displayMode: 'initials',
+    xpHistory: []
 };
-
-// ============================================
-// CONTEXT
-// ============================================
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
 
+// Legacy export for compatibility if needed (mapped from new badges)
+export const BADGES: Record<string, any> = MOCK_BADGES.reduce((acc, b) => ({ ...acc, [b.id]: b }), {});
+
 export function GamificationProvider({ children }: { children: ReactNode }) {
-    const [state, setState] = useState<GamificationState>(initialState);
+    const [student, setStudent] = useState<StudentGamification>(defaultStudent);
+    const [badges, setBadges] = useState<Badge[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const calculateLevel = (xp: number) => Math.floor(xp / 100) + 1;
+    // Engines
+    // Note: In a real app these might be singletons or useDependency Injection
+    const dataProvider = getDataProvider();
+    const xpEngine = new XPEngine();
+    const badgeEngine = new BadgeEngine();
 
-    const addXP = useCallback((amount: number, reason: string) => {
-        setState(prev => {
-            const newXP = prev.xp + amount;
-            const newLevel = calculateLevel(newXP);
+    // MVP: Hardcoded current student
+    const CURRENT_STUDENT_ID = 'demo_student_001';
 
-            // TODO: logic to trigger level up notification could go here
+    const refresh = useCallback(async () => {
+        try {
+            const s = await dataProvider.getStudentGamification(CURRENT_STUDENT_ID);
+            const b = await dataProvider.getBadgeDefinitions();
+            setStudent(s);
+            setBadges(b);
+        } catch (error) {
+            console.error("Failed to refresh gamification state:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [dataProvider]);
 
-            return {
-                ...prev,
-                xp: newXP,
-                level: newLevel,
-                lastActivityDate: new Date(),
-            };
+    useEffect(() => {
+        refresh();
+    }, [refresh]);
+
+    const addXP = useCallback(async (amount: number, reason: string) => {
+        // We use the engine to calculate and award, but for manual override we might call provider directly
+        // The Engine supports calculating rules, but here let's assume we just want to ADD raw XP for now
+        // or trigger a generic "manual_award" activity.
+
+        // However, the interface expects `amount`. 
+        // The XPEngine `calculateAndAwardXP` takes an activity type.
+        // Let's bypass engine for raw add if needed, OR add a 'manual' rule.
+
+        // For MVP compatibility with existing calls:
+        await dataProvider.updateStudentXP(CURRENT_STUDENT_ID, amount, reason);
+        refresh();
+    }, [dataProvider, refresh]);
+
+    const unlockBadge = useCallback(async (badgeId: string) => {
+        await dataProvider.awardBadge(CURRENT_STUDENT_ID, badgeId);
+        refresh();
+    }, [dataProvider, refresh]);
+
+    const incrementStreak = useCallback(async () => {
+        // MVP: Simple toggle logic or increment data
+        // We need to pass a StreakUpdate object
+        const current = await dataProvider.getStudentGamification(CURRENT_STUDENT_ID);
+        await dataProvider.updateStudentStreak(CURRENT_STUDENT_ID, {
+            currentStreak: current.currentStreak + 1,
+            lastActiveDate: new Date().toISOString()
         });
-        console.log(`[Gamification] +${amount} XP: ${reason}`);
-    }, []);
-
-    const unlockBadge = useCallback((badgeId: string) => {
-        setState(prev => {
-            if (prev.achievements.some(a => a.badgeId === badgeId)) return prev;
-
-            return {
-                ...prev,
-                achievements: [...prev.achievements, { id: crypto.randomUUID(), badgeId, unlockedAt: new Date() }]
-            };
-        });
-    }, []);
-
-    const incrementStreak = useCallback(() => {
-        // Simple streak logic (in a real app, compare dates properly)
-        setState(prev => ({
-            ...prev,
-            currentStreak: prev.currentStreak + 1
-        }));
-    }, []);
+        refresh();
+    }, [dataProvider, refresh]);
 
     return (
-        <GamificationContext.Provider value={{ state, addXP, unlockBadge, incrementStreak }}>
+        <GamificationContext.Provider value={{
+            student,
+            badges,
+            loading,
+            addXP,
+            unlockBadge,
+            incrementStreak,
+            refresh
+        }}>
             {children}
         </GamificationContext.Provider>
     );
