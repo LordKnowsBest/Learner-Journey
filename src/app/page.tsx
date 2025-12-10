@@ -43,7 +43,7 @@ export default function WelcomePage() {
 
             <div className="mt-12">
               <Button asChild size="lg" className="text-xl px-8 py-6 h-auto">
-                <Link href="/diagnostic">
+                <Link href="/problems">
                   Start Your Journey
                   <ArrowRight className="ml-2 h-6 w-6" />
                 </Link>

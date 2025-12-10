@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppHeader } from "@/components/header";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { BadgeNotification } from "@/components/gamification/badge-notification";
 import { GamificationProvider } from "@/context/GamificationContext";
@@ -42,8 +44,13 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                   >
-                    <AppHeader />
-                    <main>{children}</main>
+                    <SidebarProvider>
+                      <AppSidebar />
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <AppHeader />
+                        <main className="flex-1">{children}</main>
+                      </div>
+                    </SidebarProvider>
                     <BadgeNotification />
                     <Toaster />
                   </ThemeProvider>

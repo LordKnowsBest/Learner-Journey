@@ -11,9 +11,23 @@ import {
   SessionState,
   LearningPath,
   KnowledgeNode,
+  // Adaptive Assessment Types
+  AdaptiveAssessmentState,
+  StudentMasteryProfile,
+  MasteryEvidence,
+  AssessmentDomain,
+  AssessmentSession,
 } from '@/lib/types';
+import { MasteryEngine, conceptToDomainMap } from '@/lib/engines/MasteryEngine';
 import { getProblemById } from '@/lib/data';
 import { PathRouter } from '@/lib/engines/PathRouter';
+import {
+  LEARNING_CHECKPOINTS,
+  getTriggeredCheckpoints as getTriggeredCheckpointsUtil,
+  getNextPendingCheckpoint as getNextPendingCheckpointUtil,
+  getCheckpointProgress as getCheckpointProgressUtil,
+} from '@/lib/checkpoint-config';
+import { CheckpointConfig } from '@/lib/types';
 
 // ============================================
 // INITIAL STATE
@@ -38,6 +52,18 @@ const initialLegacyState: SessionState = {
   completedNodes: [],
 };
 
+// Adaptive Assessment initial state
+const initialAssessmentState: AdaptiveAssessmentState = {
+  currentSession: null,
+  masteryProfile: null,
+  allEvidence: [],
+  pendingChecks: [],
+  checkpointsCompleted: [],
+  checkpointsPending: ['checkpoint_1', 'checkpoint_2'],
+  adaptiveEnabled: true,
+  showMasteryIndicators: true,
+};
+
 // ============================================
 // CONTEXT TYPE
 // ============================================
@@ -46,6 +72,7 @@ interface PBLSessionContextType {
   // PBL State
   session: PBLSessionState;
   legacySession: SessionState;
+  assessmentState: AdaptiveAssessmentState;
 
   // Problem Management
   startProblem: (problemId: string) => void;
@@ -78,6 +105,22 @@ interface PBLSessionContextType {
   submitDiagnostic: (score: number) => void;
   completeNode: (nodeId: string) => void;
   submitPostTest: (score: number) => void;
+
+  // Adaptive Assessment & Mastery
+  updateMasteryFromAssessment: (evidence: MasteryEvidence[]) => void;
+  recordKnowledgeCheck: (evidence: MasteryEvidence) => void;
+  getMasteryLevel: (domain: AssessmentDomain) => number;
+  getConceptMasteryLevel: (conceptId: string) => number;
+  getMasterySummary: () => ReturnType<typeof MasteryEngine.getMasterySummary> | null;
+  hasCompletedDiagnostic: () => boolean;
+  getRecommendedDifficulty: () => 'beginner' | 'intermediate' | 'advanced';
+
+  // Checkpoint Management
+  completeCheckpoint: (checkpointId: string, passed: boolean, xpReward?: number) => void;
+  getTriggeredCheckpoints: () => CheckpointConfig[];
+  getNextPendingCheckpoint: () => CheckpointConfig | null;
+  getCheckpointProgress: (checkpointId: string) => { current: number; required: number; percentage: number } | null;
+  isCheckpointCompleted: (checkpointId: string) => boolean;
 }
 
 // ============================================
@@ -93,6 +136,7 @@ const PBLSessionContext = createContext<PBLSessionContextType | undefined>(undef
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<PBLSessionState>(initialPBLState);
   const [legacySession, setLegacySession] = useState<SessionState>(initialLegacyState);
+  const [assessmentState, setAssessmentState] = useState<AdaptiveAssessmentState>(initialAssessmentState);
   const router = useRouter();
 
   // Initialize Routing Engine
@@ -437,11 +481,150 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     router.push('/results');
   }, [router]);
 
+  // ---------- Adaptive Assessment & Mastery ----------
+
+  const updateMasteryFromAssessment = useCallback((evidence: MasteryEvidence[]) => {
+    setAssessmentState(prev => {
+      // Initialize or update profile
+      let profile = prev.masteryProfile || MasteryEngine.initializeProfile('current-user');
+
+      // Update profile with all evidence
+      profile = MasteryEngine.updateFromDiagnostic(profile, evidence);
+
+      // Also update legacy diagnostic score for backward compatibility
+      const overallScore = profile.overallMastery;
+      setLegacySession(ls => ({ ...ls, diagnosticScore: overallScore }));
+
+      // Sync mastery to PBL session concept mastery
+      const conceptMastery: Record<string, number> = {};
+      Object.entries(conceptToDomainMap).forEach(([conceptId, domain]) => {
+        conceptMastery[conceptId] = profile.domainMastery[domain]?.masteryLevel || 0;
+      });
+      setSession(s => ({ ...s, conceptMastery: { ...s.conceptMastery, ...conceptMastery } }));
+
+      return {
+        ...prev,
+        masteryProfile: profile,
+        allEvidence: [...prev.allEvidence, ...evidence],
+      };
+    });
+  }, []);
+
+  const recordKnowledgeCheck = useCallback((evidence: MasteryEvidence) => {
+    setAssessmentState(prev => {
+      // Initialize or update profile
+      let profile = prev.masteryProfile || MasteryEngine.initializeProfile('current-user');
+
+      // Update with single evidence
+      profile = MasteryEngine.updateProfile(profile, evidence);
+
+      // Sync to concept mastery
+      const conceptId = Object.entries(conceptToDomainMap).find(([_, d]) => d === evidence.domain)?.[0];
+      if (conceptId) {
+        setSession(s => ({
+          ...s,
+          conceptMastery: {
+            ...s.conceptMastery,
+            [conceptId]: profile.domainMastery[evidence.domain]?.masteryLevel || 0,
+          },
+        }));
+      }
+
+      return {
+        ...prev,
+        masteryProfile: profile,
+        allEvidence: [...prev.allEvidence, evidence],
+      };
+    });
+  }, []);
+
+  const getMasteryLevel = useCallback((domain: AssessmentDomain): number => {
+    return assessmentState.masteryProfile?.domainMastery[domain]?.masteryLevel || 0;
+  }, [assessmentState.masteryProfile]);
+
+  const getConceptMasteryLevel = useCallback((conceptId: string): number => {
+    const domain = conceptToDomainMap[conceptId];
+    if (!domain || !assessmentState.masteryProfile) return session.conceptMastery[conceptId] || 0;
+    return assessmentState.masteryProfile.domainMastery[domain]?.masteryLevel || 0;
+  }, [assessmentState.masteryProfile, session.conceptMastery]);
+
+  const getMasterySummary = useCallback(() => {
+    if (!assessmentState.masteryProfile) return null;
+    return MasteryEngine.getMasterySummary(assessmentState.masteryProfile);
+  }, [assessmentState.masteryProfile]);
+
+  const hasCompletedDiagnostic = useCallback((): boolean => {
+    return assessmentState.masteryProfile !== null && assessmentState.masteryProfile.totalAssessments > 0;
+  }, [assessmentState.masteryProfile]);
+
+  const getRecommendedDifficulty = useCallback((): 'beginner' | 'intermediate' | 'advanced' => {
+    if (!assessmentState.masteryProfile) return 'beginner';
+    return MasteryEngine.getRecommendedDifficulty(assessmentState.masteryProfile);
+  }, [assessmentState.masteryProfile]);
+
+  // ---------- Checkpoint Management ----------
+
+  const completeCheckpoint = useCallback((checkpointId: string, passed: boolean, xpReward?: number) => {
+    setAssessmentState(prev => {
+      if (passed) {
+        // Move from pending to completed
+        return {
+          ...prev,
+          checkpointsCompleted: [...prev.checkpointsCompleted, checkpointId],
+          checkpointsPending: prev.checkpointsPending.filter(id => id !== checkpointId),
+        };
+      }
+      // If failed, keep in pending (can retry later)
+      return prev;
+    });
+  }, []);
+
+  const getTriggeredCheckpoints = useCallback((): CheckpointConfig[] => {
+    // Calculate current progress
+    const completedProblems = session.problemsProgress.filter(p => p.status === 'completed').length;
+    const masteredConcepts = session.allDiscoveredConcepts.length;
+    const timeSpentMinutes = Math.floor(session.totalLearningTime / 60);
+
+    return getTriggeredCheckpointsUtil(
+      assessmentState.checkpointsCompleted,
+      masteredConcepts,
+      completedProblems,
+      timeSpentMinutes
+    );
+  }, [session.problemsProgress, session.allDiscoveredConcepts, session.totalLearningTime, assessmentState.checkpointsCompleted]);
+
+  const getNextPendingCheckpoint = useCallback((): CheckpointConfig | null => {
+    const completedProblems = session.problemsProgress.filter(p => p.status === 'completed').length;
+    const masteredConcepts = session.allDiscoveredConcepts.length;
+
+    return getNextPendingCheckpointUtil(
+      assessmentState.checkpointsCompleted,
+      masteredConcepts,
+      completedProblems
+    );
+  }, [session.problemsProgress, session.allDiscoveredConcepts, assessmentState.checkpointsCompleted]);
+
+  const getCheckpointProgress = useCallback((checkpointId: string): { current: number; required: number; percentage: number } | null => {
+    const checkpoint = LEARNING_CHECKPOINTS.find(c => c.checkpointId === checkpointId);
+    if (!checkpoint) return null;
+
+    const completedProblems = session.problemsProgress.filter(p => p.status === 'completed').length;
+    const masteredConcepts = session.allDiscoveredConcepts.length;
+    const timeSpentMinutes = Math.floor(session.totalLearningTime / 60);
+
+    return getCheckpointProgressUtil(checkpoint, masteredConcepts, completedProblems, timeSpentMinutes);
+  }, [session.problemsProgress, session.allDiscoveredConcepts, session.totalLearningTime]);
+
+  const isCheckpointCompleted = useCallback((checkpointId: string): boolean => {
+    return assessmentState.checkpointsCompleted.includes(checkpointId);
+  }, [assessmentState.checkpointsCompleted]);
+
   // ---------- Context Value ----------
 
   const value: PBLSessionContextType = {
     session,
     legacySession,
+    assessmentState,
     startProblem,
     getCurrentProblem,
     startPhase,
@@ -460,6 +643,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     submitDiagnostic,
     completeNode,
     submitPostTest,
+    // Adaptive Assessment & Mastery
+    updateMasteryFromAssessment,
+    recordKnowledgeCheck,
+    getMasteryLevel,
+    getConceptMasteryLevel,
+    getMasterySummary,
+    hasCompletedDiagnostic,
+    getRecommendedDifficulty,
+    // Checkpoint Management
+    completeCheckpoint,
+    getTriggeredCheckpoints,
+    getNextPendingCheckpoint,
+    getCheckpointProgress,
+    isCheckpointCompleted,
   };
 
   return (

@@ -341,3 +341,261 @@ export type ExplainabilityState = {
   // Stakeholder access levels
   viewerRole: 'student' | 'parent' | 'teacher' | 'admin';
 };
+
+// ============================================
+// ADAPTIVE ASSESSMENT TYPES
+// High/Low Stakes Testing Throughout Journey
+// ============================================
+
+// ---------- Assessment Domain Types ----------
+
+export enum AssessmentDomain {
+  PRIVACY = 'privacy',
+  DATA_COLLECTION = 'data_collection',
+  CONSENT = 'consent',
+  ALGORITHMIC_BIAS = 'algorithmic_bias',
+  AI_DECISIONS = 'ai_decisions',
+  FAIRNESS = 'fairness',
+  TRANSPARENCY = 'transparency',
+  MISINFORMATION = 'misinformation',
+  HUMAN_OVERSIGHT = 'human_oversight',
+  AI_FUNDAMENTALS = 'ai_fundamentals',
+  ML_BASICS = 'ml_basics',
+}
+
+export enum BloomLevel {
+  REMEMBER = 'remember',       // Recall facts
+  UNDERSTAND = 'understand',   // Explain concepts
+  APPLY = 'apply',             // Use in new situations
+  ANALYZE = 'analyze',         // Draw connections
+  EVALUATE = 'evaluate',       // Justify decisions
+  CREATE = 'create',           // Produce new work
+}
+
+export enum AssessmentStakes {
+  LOW = 'low',           // Knowledge checks, no penalty
+  MEDIUM = 'medium',     // Phase completions, moderate weight
+  HIGH = 'high',         // Summative assessments, significant weight
+}
+
+export enum QuestionType {
+  MULTIPLE_CHOICE = 'multiple_choice',
+  MULTIPLE_SELECT = 'multiple_select',
+  TRUE_FALSE = 'true_false',
+  SCENARIO_BASED = 'scenario_based',
+  LIKERT_CONFIDENCE = 'likert_confidence',
+}
+
+// ---------- Assessment Question Types ----------
+
+export type AdaptiveQuestion = {
+  id: string;
+  // Content
+  question: string;
+  questionType: QuestionType;
+  options: {
+    id: string;
+    text: string;
+    isCorrect: boolean;
+    feedback?: string;           // Shown after answer
+    misconception?: string;      // What misconception this wrong answer reveals
+  }[];
+  // Metadata
+  domain: AssessmentDomain;
+  bloomLevel: BloomLevel;
+  difficulty: number;            // 0-100 IRT difficulty parameter
+  discrimination: number;        // How well it differentiates ability levels
+  // Context
+  scenarioContext?: string;      // For scenario-based questions
+  relatedConcepts: string[];     // Links to conceptResources
+  hints?: string[];              // Progressive hints if allowed
+  explanation: string;           // Shown after answer
+  // Assessment properties
+  stakes: AssessmentStakes;
+  timeEstimateSeconds: number;
+  // For adaptive selection
+  exposureCount?: number;        // Times shown to prevent overuse
+};
+
+// ---------- Mastery Tracking Types ----------
+
+export type MasteryEvidence = {
+  id: string;
+  timestamp: Date;
+  source: 'diagnostic' | 'knowledge_check' | 'phase_assessment' | 'reflection' | 'problem_completion';
+  questionId?: string;
+  domain: AssessmentDomain;
+  isCorrect: boolean;
+  responseTimeMs: number;
+  confidenceLevel?: number;      // Self-reported 1-5
+  stakes: AssessmentStakes;
+  weight: number;                // How much this evidence counts
+};
+
+export type DomainMastery = {
+  domain: AssessmentDomain;
+  // Current estimates
+  masteryLevel: number;          // 0-100, Bayesian estimate
+  confidence: number;            // 0-1, how certain we are
+  // Evidence tracking
+  evidenceCount: number;
+  correctCount: number;
+  lastAssessedAt: Date | null;
+  // Spaced repetition
+  nextReviewAt: Date | null;
+  easeFactor: number;            // SM-2 algorithm factor
+  interval: number;              // Days until next review
+  // History
+  masteryHistory: {
+    timestamp: Date;
+    level: number;
+    trigger: string;
+  }[];
+};
+
+export type StudentMasteryProfile = {
+  studentId: string;
+  // Per-domain mastery
+  domainMastery: Record<AssessmentDomain, DomainMastery>;
+  // Overall metrics
+  overallMastery: number;        // Weighted average
+  totalAssessments: number;
+  totalTimeSpent: number;        // seconds
+  // Adaptive parameters
+  abilityEstimate: number;       // IRT theta parameter
+  abilityStdError: number;       // Standard error of estimate
+  // Learning style indicators
+  preferredPace: 'quick' | 'moderate' | 'thorough';
+  strongDomains: AssessmentDomain[];
+  growthDomains: AssessmentDomain[];
+  // Timestamps
+  createdAt: Date;
+  lastUpdatedAt: Date;
+};
+
+// ---------- Assessment Session Types ----------
+
+export type AssessmentResponse = {
+  questionId: string;
+  selectedOptionIds: string[];
+  isCorrect: boolean;
+  responseTimeMs: number;
+  confidenceLevel?: number;
+  hintsUsed: number;
+  timestamp: Date;
+};
+
+export type AssessmentSession = {
+  sessionId: string;
+  sessionType: 'diagnostic' | 'knowledge_check' | 'phase_assessment' | 'checkpoint' | 'summative';
+  stakes: AssessmentStakes;
+  // Progress
+  status: 'not_started' | 'in_progress' | 'completed' | 'abandoned';
+  startedAt: Date | null;
+  completedAt: Date | null;
+  // Questions and responses
+  questionSequence: string[];    // Question IDs in order shown
+  responses: AssessmentResponse[];
+  currentQuestionIndex: number;
+  // Adaptive parameters
+  targetDomains: AssessmentDomain[];
+  adaptiveState: {
+    currentAbilityEstimate: number;
+    standardError: number;
+    questionsRemaining: number;
+    stoppingCriteriaMet: boolean;
+  };
+  // Results
+  results?: AssessmentResults;
+};
+
+export type AssessmentResults = {
+  sessionId: string;
+  // Scores
+  overallScore: number;          // 0-100
+  domainScores: Record<AssessmentDomain, number>;
+  // Analysis
+  strengths: AssessmentDomain[];
+  growthAreas: AssessmentDomain[];
+  misconceptions: string[];
+  // Recommendations
+  recommendedPath: {
+    startingDifficulty: 'beginner' | 'intermediate' | 'advanced';
+    priorityDomains: AssessmentDomain[];
+    suggestedProblems: string[];
+    skipConcepts: string[];      // Already mastered
+  };
+  // Meta
+  completedAt: Date;
+  totalTimeMs: number;
+  questionCount: number;
+};
+
+// ---------- Knowledge Check Types (Low Stakes) ----------
+
+export type KnowledgeCheckConfig = {
+  triggerPoint: 'concept_discovery' | 'phase_completion' | 'time_interval' | 'manual';
+  domain: AssessmentDomain;
+  questionCount: number;
+  maxTimeSeconds: number;
+  allowHints: boolean;
+  showFeedback: boolean;
+  retryAllowed: boolean;
+};
+
+export type KnowledgeCheckResult = {
+  checkId: string;
+  domain: AssessmentDomain;
+  score: number;
+  passed: boolean;              // Met threshold
+  masteryDelta: number;         // Change in mastery
+  timestamp: Date;
+};
+
+// ---------- Checkpoint Assessment Types (High Stakes) ----------
+
+export type CheckpointConfig = {
+  checkpointId: string;
+  name: string;
+  description: string;
+  // Triggers
+  triggerCondition: {
+    type: 'problems_completed' | 'concepts_mastered' | 'time_spent' | 'manual';
+    threshold: number;
+  };
+  // Assessment setup
+  targetDomains: AssessmentDomain[];
+  questionCount: number;
+  timeLimit?: number;           // seconds, optional
+  passingScore: number;         // 0-100
+  // Consequences
+  onPass: {
+    unlockContent?: string[];
+    awardBadge?: string;
+    xpReward: number;
+  };
+  onFail: {
+    remedialContent?: string[];
+    retryDelay?: number;        // minutes before retry
+    maxRetries: number;
+  };
+};
+
+// ---------- Adaptive Assessment State ----------
+
+export type AdaptiveAssessmentState = {
+  // Current session
+  currentSession: AssessmentSession | null;
+  // Student profile
+  masteryProfile: StudentMasteryProfile | null;
+  // All evidence collected
+  allEvidence: MasteryEvidence[];
+  // Pending knowledge checks
+  pendingChecks: KnowledgeCheckConfig[];
+  // Checkpoint progress
+  checkpointsCompleted: string[];
+  checkpointsPending: string[];
+  // Settings
+  adaptiveEnabled: boolean;
+  showMasteryIndicators: boolean;
+};

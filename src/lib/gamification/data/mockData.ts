@@ -3,41 +3,30 @@ import { StudentGamification, LeaderboardEntry, Badge, Assessment } from '../typ
 export const MOCK_STUDENTS: StudentGamification[] = [
     {
         studentId: 'demo_student_001',
-        totalXP: 2450,
-        level: 7,
-        levelTitle: 'AI Explorer',
-        currentStreak: 7,
-        longestStreak: 14,
+        totalXP: 0,
+        level: 1,
+        levelTitle: 'AI Novice',
+        currentStreak: 0,
+        longestStreak: 0,
         lastActiveDate: new Date().toISOString().split('T')[0],
-        streakProtectionTokens: 1,
-        unlockedBadges: ['neural_navigator', 'data_explorer', 'ethics_starter', 'first_quest'],
-        badgeProgress: {
-            'bias_detective': 0.65,
-            'collaboration_star': 0.30
-        },
+        streakProtectionTokens: 0,
+        unlockedBadges: [],
+        badgeProgress: {},
         activeQuests: ['bias_mystery'],
-        completedQuests: ['ai_fundamentals_quest'],
+        completedQuests: [],
         questProgress: {
             'bias_mystery': {
                 questId: 'bias_mystery',
                 status: 'in_progress',
-                currentChapter: 3,
-                chapterProgress: {
-                    'ch1_discovery': { objectives: { 'data_bias_intro': true, 'types_of_bias': true }, completedAt: '2025-12-01' },
-                    'ch2_investigation': { objectives: { 'bias_types_quiz': true, 'bias_personal_impact': true }, completedAt: '2025-12-05' },
-                    'ch3_solution': { objectives: { 'bias_detection_tool': false, 'fairness_solutions_quiz': false }, completedAt: null }
-                },
-                startedAt: '2025-11-28',
+                currentChapter: 1,
+                chapterProgress: {},
+                startedAt: new Date().toISOString().split('T')[0],
                 completedAt: null
             }
         },
         leaderboardOptIn: true,
         displayMode: 'initials',
-        xpHistory: [
-            { date: '2025-12-07', xpEarned: 150, source: 'quest_chapter_complete' },
-            { date: '2025-12-06', xpEarned: 75, source: 'quiz_perfect' },
-            { date: '2025-12-05', xpEarned: 50, source: 'node_completion' }
-        ]
+        xpHistory: []
     },
     {
         studentId: 'demo_student_002',

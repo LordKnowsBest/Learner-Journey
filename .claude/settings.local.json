@@ -23,7 +23,8 @@
       "Bash(npx next build)",
       "Bash(npx tsc:*)",
       "Bash(npx next:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(tasklist /FI \"IMAGENAME eq node.exe\")"
     ],
     "deny": [],
     "ask": []
