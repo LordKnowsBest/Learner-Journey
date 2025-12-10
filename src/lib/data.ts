@@ -342,6 +342,143 @@ export const conceptResources: ConceptResource[] = [
     category: 'Advanced Topics',
     xpValue: 300,
   },
+  // ... existing concepts ...
+  {
+    id: 'ai_core_hub',
+    title: 'AI Core Concepts',
+    description: 'The central hub of Artificial Intelligence: Reasoning, Planning, and Learning.',
+    videoUrl: 'https://www.youtube.com/embed/JMUxmLyrhSk',
+    videoTitle: 'AI Core Concepts',
+    videoDuration: 300,
+    articleUrl: 'https://en.wikipedia.org/wiki/Artificial_intelligence',
+    articleTitle: 'Artificial Intelligence Core',
+    keyInsights: [
+      'AI is more than just Machine Learning',
+      'Reasoning engines use logic rules',
+      'Planning algorithms find sequences of actions',
+      'Knowledge Representation is key to "understanding"'
+    ],
+    relatedConcepts: ['ai_intro_001', 'ml_basics_001'],
+    guidingQuestions: [
+      'How does a chess computer decide its next move?',
+      'Can computers "think" without learning from data?'
+    ],
+    category: 'AI Core',
+    xpValue: 300
+  },
+  {
+    id: 'computer_vision_001',
+    title: 'Computer Vision',
+    description: 'Teaching computers to "see" and interpret images.',
+    videoUrl: 'https://www.youtube.com/embed/OcycT1Jwsns',
+    videoTitle: 'Computer Vision Explained',
+    videoDuration: 320,
+    articleUrl: 'https://www.ibm.com/topics/computer-vision',
+    articleTitle: 'What is Computer Vision?',
+    keyInsights: [
+      'Computers see images as grids of numbers (pixels)',
+      'Object Detection vs. Image Classification',
+      'Faces, medical scans, and self-driving cars'
+    ],
+    relatedConcepts: ['ml_basics_001', 'neural_networks_001'],
+    guidingQuestions: [
+      'How does face ID unlock your phone?',
+      'Why is it hard for computers to tell a muffin from a chihuahua?'
+    ],
+    category: 'AI Core',
+    xpValue: 200
+  },
+  {
+    id: 'neural_networks_001',
+    title: 'Neural Networks',
+    description: 'AI inspired by the human brain.',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
+    videoTitle: 'Neural Networks',
+    videoDuration: 400,
+    articleUrl: 'https://www.ibm.com/topics/neural-networks',
+    articleTitle: 'Neural Networks Explained',
+    keyInsights: [
+      'Layers of artificial "neurons" process information',
+      'Deep Learning is neural networks with many layers',
+      'Requires vast amounts of data and computing power'
+    ],
+    relatedConcepts: ['ml_basics_001', 'computer_vision_001'],
+    guidingQuestions: [
+      'Why are they called "neural" networks?',
+      'What is "training" a neural network?'
+    ],
+    category: 'AI Core',
+    xpValue: 300
+  },
+  {
+    id: 'careers_001',
+    title: 'Careers in AI',
+    description: 'The wide range of jobs in the AI industry beyond coding.',
+    videoUrl: 'https://www.youtube.com/embed/5p248yoa3oE',
+    videoTitle: 'AI Careers',
+    videoDuration: 240,
+    articleUrl: 'https://www.coursera.org/articles/ai-jobs',
+    articleTitle: 'Jobs in Artificial Intelligence',
+    keyInsights: [
+      'Data Scientists and ML Engineers build models',
+      'AI Ethicists ensure fairness and safety',
+      'Prompt Engineers design inputs for Generative AI',
+      'Domain Experts (doctors, artists) work WITH AI'
+    ],
+    relatedConcepts: ['ai_intro_001'],
+    guidingQuestions: [
+      'Do you need to be a math genius to work in AI?',
+      'What new jobs might exist in 10 years thanks to AI?'
+    ],
+    category: 'Careers & Industry',
+    xpValue: 150
+  },
+  {
+    id: 'literacy_001',
+    title: 'AI Literacy',
+    description: 'Skills to live and work effectively with AI tools.',
+    videoUrl: 'https://www.youtube.com/embed/7d8C0jT6WlI',
+    videoTitle: 'AI Literacy',
+    videoDuration: 200,
+    articleUrl: 'https://www.weforum.org/agenda/2023/05/ai-literacy-skills/',
+    articleTitle: 'Why AI Literacy Matters',
+    keyInsights: [
+      'Critical thinking is the most important AI skill',
+      'Understanding capabilities and limitations',
+      'Knowing when to use AI and when not to',
+      'Recognizing AI-generated content'
+    ],
+    relatedConcepts: ['misinformation', 'algo_thinking_001'],
+    guidingQuestions: [
+      'How can AI help you learn faster?',
+      'When should you NOT trust an AI answer?'
+    ],
+    category: 'AI Literacy Skills',
+    xpValue: 150
+  },
+  {
+    id: 'system_design_001',
+    title: 'AI System Design',
+    description: 'How to build safe, reliable, and useful AI products.',
+    videoUrl: 'https://www.youtube.com/embed/ueD69hJ_f7c',
+    videoTitle: 'Designing AI Products',
+    videoDuration: 300,
+    articleUrl: 'https://pair.withgoogle.com/',
+    articleTitle: 'People + AI Research',
+    keyInsights: [
+      'User-Centered Design: Start with the human need',
+      'Feedback Loops: How the system improves (or breaks)',
+      'Safety Guardrails: Preventing bad outputs',
+      'Model Maintenance: Keeping it working over time'
+    ],
+    relatedConcepts: ['ai_core_hub', 'human_oversight'],
+    guidingQuestions: [
+      'If you were designing a robot tutor, what rules would you give it?',
+      'How do you design for failure (when the AI is wrong)?'
+    ],
+    category: 'System Design',
+    xpValue: 250
+  },
 ];
 
 // ============================================
@@ -973,27 +1110,21 @@ export function getPhaseById(problemId: string, phaseId: string) {
 // LEGACY DATA (for backward compatibility)
 // ============================================
 
+import { NodeCategory, DifficultyLevel } from './types';
+
 export const knowledgeGraphNodes: KnowledgeNode[] = [
   {
-    id: 'ethics_01',
+    nodeId: 'ethics_01',
     title: 'Privacy Basics',
     description: 'What is personal data and why does privacy matter?',
-    order: 1,
-    videoUrl: 'https://www.youtube.com/embed/hIXhnWUmMvw',
-    videoTitle: 'What is Privacy?',
-    videoDuration: 180,
-    articleUrl: 'https://www.commonsense.org/education/digital-citizenship/lesson/your-digital-footprint',
-    articleTitle: 'Your Digital Footprint',
-    quiz: [
-      {
-        question: 'What is personal data?',
-        options: ['Information that identifies you', 'Random numbers', 'Public information only', 'None of the above'],
-        correctAnswer: 'Information that identifies you',
-        explanation: 'Personal data is any information that can identify you, like your name, email, or location.',
-      },
-    ],
+    category: NodeCategory.ETHICS_BIAS_SOCIETY,
+    difficulty: DifficultyLevel.BEGINNER,
+    gradeLevel: [6, 7, 8],
     prerequisites: [],
-    category: 'Ethics Foundations',
+    relatedNodes: [],
+    ethicsConnections: [],
+    estimatedMinutes: 20,
+    masteryThreshold: 80,
   },
 ];
 

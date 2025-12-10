@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -160,6 +161,8 @@ function ConceptDialog({
   concept: ConceptResource;
   mastery: number;
 }) {
+  const router = useRouter();
+
   return (
     <TooltipProvider delayDuration={300}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -208,108 +211,108 @@ function ConceptDialog({
             </Tooltip>
           </TabsList>
 
-        <TabsContent value="insights" className="space-y-4">
-          <div className="space-y-2">
-            {concept.keyInsights.map((insight, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg"
-              >
-                <ChevronRight className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
-                <p className="text-sm">{insight}</p>
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="resources" className="space-y-4">
-          {/* Video */}
-          <div className="space-y-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <h4 className="font-semibold flex items-center gap-2 cursor-help w-fit">
-                  <Video className="w-4 h-4" />
-                  Video
-                  <HelpCircle className="w-3 h-3 text-muted-foreground" />
-                </h4>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{conceptTooltips.videoResource}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={concept.videoUrl.replace("/embed/", "/watch?v=")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+          <TabsContent value="insights" className="space-y-4">
+            <div className="space-y-2">
+              {concept.keyInsights.map((insight, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg"
                 >
-                  <span className="flex-1 text-sm">{concept.videoTitle}</span>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Opens in a new tab - {Math.floor(concept.videoDuration / 60)} min watch</p>
-              </TooltipContent>
-            </Tooltip>
-            <p className="text-xs text-muted-foreground">
-              Duration: {Math.floor(concept.videoDuration / 60)} min
+                  <ChevronRight className="w-4 h-4 mt-0.5 text-primary flex-shrink-0" />
+                  <p className="text-sm">{insight}</p>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="resources" className="space-y-4">
+            {/* Video */}
+            <div className="space-y-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <h4 className="font-semibold flex items-center gap-2 cursor-help w-fit">
+                    <Video className="w-4 h-4" />
+                    Video
+                    <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                  </h4>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{conceptTooltips.videoResource}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={concept.videoUrl.replace("/embed/", "/watch?v=")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <span className="flex-1 text-sm">{concept.videoTitle}</span>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Opens in a new tab - {Math.floor(concept.videoDuration / 60)} min watch</p>
+                </TooltipContent>
+              </Tooltip>
+              <p className="text-xs text-muted-foreground">
+                Duration: {Math.floor(concept.videoDuration / 60)} min
+              </p>
+            </div>
+
+            {/* Article */}
+            <div className="space-y-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <h4 className="font-semibold flex items-center gap-2 cursor-help w-fit">
+                    <FileText className="w-4 h-4" />
+                    Article
+                    <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                  </h4>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{conceptTooltips.articleResource}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <a
+                    href={concept.articleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+                  >
+                    <span className="flex-1 text-sm">{concept.articleTitle}</span>
+                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Opens in a new tab for in-depth reading</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="questions" className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Consider these questions to deepen your understanding:
             </p>
-          </div>
-
-          {/* Article */}
-          <div className="space-y-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <h4 className="font-semibold flex items-center gap-2 cursor-help w-fit">
-                  <FileText className="w-4 h-4" />
-                  Article
-                  <HelpCircle className="w-3 h-3 text-muted-foreground" />
-                </h4>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{conceptTooltips.articleResource}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={concept.articleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
+            <div className="space-y-2">
+              {concept.guidingQuestions.map((question, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20"
                 >
-                  <span className="flex-1 text-sm">{concept.articleTitle}</span>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Opens in a new tab for in-depth reading</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="questions" className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Consider these questions to deepen your understanding:
-          </p>
-          <div className="space-y-2">
-            {concept.guidingQuestions.map((question, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-2 p-3 bg-primary/5 rounded-lg border border-primary/20"
-              >
-                <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs flex-shrink-0">
-                  {index + 1}
-                </span>
-                <p className="text-sm">{question}</p>
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs flex-shrink-0">
+                    {index + 1}
+                  </span>
+                  <p className="text-sm">{question}</p>
+                </div>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Related Concepts */}
         {concept.relatedConcepts.length > 0 && (
@@ -359,6 +362,14 @@ function ConceptDialog({
             </TooltipContent>
           </Tooltip>
           <Progress value={mastery} className="mt-2" />
+        </div>
+
+        <div className="mt-6 pt-4 border-t flex justify-end">
+          <Button onClick={() => router.push(`/learn/${concept.id}`)} className="w-full sm:w-auto">
+            <BookOpen className="w-4 h-4 mr-2" />
+            Go to Full Lesson
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       </DialogContent>
     </TooltipProvider>

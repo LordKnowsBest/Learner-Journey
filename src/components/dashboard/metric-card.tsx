@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, InfoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { EducationalTooltip } from "@/components/ui/educational-tooltip";
+import { EthicalTooltipDefinition } from "@/lib/ethical-design-tooltips";
 
 export interface MetricCardProps {
     label: string;
@@ -12,6 +13,9 @@ export interface MetricCardProps {
     progress?: number;
     className?: string;
     tooltip?: string;
+    /** Educational tooltip definition for multi-layer explanations */
+    tooltipDefinition?: EthicalTooltipDefinition;
+    tooltipSide?: "top" | "right" | "bottom" | "left";
 }
 
 export function MetricCard({
@@ -23,6 +27,8 @@ export function MetricCard({
     progress,
     className,
     tooltip,
+    tooltipDefinition,
+    tooltipSide = "bottom",
 }: MetricCardProps) {
     return (
         <Card className={cn(
@@ -32,16 +38,27 @@ export function MetricCard({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
-                    {tooltip && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <InfoIcon className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-muted-foreground cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p className="max-w-xs">{tooltip}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    )}
+                    {tooltipDefinition ? (
+                        <EducationalTooltip definition={tooltipDefinition} side={tooltipSide}>
+                            <InfoIcon className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-muted-foreground cursor-help" />
+                        </EducationalTooltip>
+                    ) : tooltip ? (
+                        <EducationalTooltip
+                            definition={{
+                                id: label.toLowerCase().replace(/\s+/g, '_'),
+                                component: "MetricCard",
+                                content: tooltip,
+                                ethicalDesign: {
+                                    principle: "Meaningful Metrics",
+                                    rationale: "Metrics should inform decisions without creating surveillance or pressure.",
+                                    category: "transparency",
+                                },
+                            }}
+                            side={tooltipSide}
+                        >
+                            <InfoIcon className="h-3.5 w-3.5 text-muted-foreground/50 hover:text-muted-foreground cursor-help" />
+                        </EducationalTooltip>
+                    ) : null}
                 </div>
                 {trend && (
                     <div

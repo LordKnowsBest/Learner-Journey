@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { CornerDownLeft, Bot, User } from 'lucide-react';
+import { CornerDownLeft, Bot, User, HelpCircle } from 'lucide-react';
 import type { Message } from '@/lib/types';
 import { askTutor } from '@/ai/flows/ai-tutor-assistance';
 
@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { EducationalTooltip } from '@/components/ui/educational-tooltip';
+import { ethicalTooltipDefinitions } from '@/lib/ethical-design-tooltips';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -56,10 +58,16 @@ export function AITutor({ nodeId }: AITutorProps) {
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bot />
-          AI Tutor
-        </CardTitle>
+        <EducationalTooltip
+          definition={ethicalTooltipDefinitions.learn_ai_tutor}
+          side="left"
+        >
+          <CardTitle className="flex items-center gap-2 cursor-help">
+            <Bot />
+            AI Tutor
+            <HelpCircle className="w-4 h-4 text-muted-foreground" />
+          </CardTitle>
+        </EducationalTooltip>
       </CardHeader>
       <CardContent className="flex flex-col flex-grow min-h-0">
         <ScrollArea className="flex-grow pr-4 -mr-4 mb-4">
@@ -98,17 +106,48 @@ export function AITutor({ nodeId }: AITutorProps) {
           </div>
         </ScrollArea>
         <form onSubmit={handleAskQuestion} className="flex gap-2 items-center">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
-            disabled={loading}
-            className="flex-grow"
-          />
-          <Button type="submit" size="icon" disabled={loading || !input.trim()}>
-            <CornerDownLeft className="h-4 w-4" />
-            <span className="sr-only">Ask</span>
-          </Button>
+          <EducationalTooltip
+            definition={{
+              id: "ai_tutor_input",
+              component: "AITutor",
+              content: "Type your questions about the concept here.",
+              ethicalDesign: {
+                principle: "Learner Voice",
+                rationale: "Questions drive learning and help identify gaps in understanding.",
+                category: "autonomy" as const,
+              },
+              pedagogy: "Student questions reveal their thinking process.",
+              technical: "Questions sent to LLM with concept context.",
+            }}
+            side="top"
+          >
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask a question..."
+              disabled={loading}
+              className="flex-grow"
+            />
+          </EducationalTooltip>
+          <EducationalTooltip
+            definition={{
+              id: "ai_tutor_send",
+              component: "AITutor",
+              content: "Send your question to the AI tutor.",
+              ethicalDesign: {
+                principle: "Immediate Feedback",
+                rationale: "Quick responses maintain learning momentum.",
+                category: "engagement" as const,
+              },
+              pedagogy: "Timely feedback supports learning flow.",
+            }}
+            side="top"
+          >
+            <Button type="submit" size="icon" disabled={loading || !input.trim()}>
+              <CornerDownLeft className="h-4 w-4" />
+              <span className="sr-only">Ask</span>
+            </Button>
+          </EducationalTooltip>
         </form>
       </CardContent>
     </Card>

@@ -1,7 +1,9 @@
-import { AlertCircle, AlertTriangle, Info, X } from "lucide-react";
+import { AlertCircle, AlertTriangle, Info, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Alert as AlertType } from "@/lib/teacher-data"; // Import Alert interface
+import { Alert as AlertType } from "@/lib/teacher-data";
+import { EducationalTooltip } from "@/components/ui/educational-tooltip";
+import { ethicalTooltipDefinitions } from "@/lib/ethical-design-tooltips";
 
 interface AlertBannerProps {
     alert: AlertType;
@@ -36,52 +38,73 @@ export function AlertBanner({ alert, onDismiss, onView }: AlertBannerProps) {
         },
     }[tier];
 
+    // Get the appropriate tooltip definition based on tier
+    const getTooltipDefinition = () => {
+        switch (tier) {
+            case "CRITICAL":
+                return ethicalTooltipDefinitions.alert_critical;
+            case "WARNING":
+                return ethicalTooltipDefinitions.alert_warning;
+            default:
+                return ethicalTooltipDefinitions.intervention_alert;
+        }
+    };
+
     return (
-        <div
-            className={cn(
-                "flex items-start gap-3 rounded-lg border p-4 shadow-sm transition-all",
-                styles.bg,
-                styles.border
-            )}
-        >
-            <div className="mt-0.5">{styles.icon}</div>
-            <div className="flex-1">
-                <div className="flex items-center gap-2">
-                    <h4 className={cn("font-medium", styles.text)}>
-                        {tier === "CRITICAL" && "Critical Alert"}
-                        {tier === "WARNING" && "Intervention Needed"}
-                        {tier === "MONITOR" && "Monitor Status"}
-                    </h4>
-                    <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", styles.badge)}>
-                        {triggerType}
-                    </span>
-                </div>
-                <p className={cn("mt-1 text-sm", styles.text)}>
-                    <span className="font-semibold">{studentName}</span> requires attention.
-                </p>
-                <div className="mt-3 flex gap-2">
-                    {onView && (
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 border-current bg-transparent hover:bg-white/20"
-                            onClick={() => onView(alert.alertId)}
-                        >
-                            View Details
-                        </Button>
-                    )}
-                    {onDismiss && (
-                        <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 hover:bg-white/20"
-                            onClick={() => onDismiss(alert.alertId)}
-                        >
-                            Dismiss
-                        </Button>
-                    )}
+        <EducationalTooltip definition={getTooltipDefinition()} side="top">
+            <div
+                className={cn(
+                    "flex items-start gap-3 rounded-lg border p-4 shadow-sm transition-all cursor-help",
+                    styles.bg,
+                    styles.border
+                )}
+            >
+                <div className="mt-0.5">{styles.icon}</div>
+                <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                        <h4 className={cn("font-medium flex items-center gap-1", styles.text)}>
+                            {tier === "CRITICAL" && "Critical Alert"}
+                            {tier === "WARNING" && "Intervention Needed"}
+                            {tier === "MONITOR" && "Monitor Status"}
+                            <HelpCircle className="h-3 w-3 opacity-50" />
+                        </h4>
+                        <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", styles.badge)}>
+                            {triggerType}
+                        </span>
+                    </div>
+                    <p className={cn("mt-1 text-sm", styles.text)}>
+                        <span className="font-semibold">{studentName}</span> requires attention.
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                        {onView && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 border-current bg-transparent hover:bg-white/20"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onView(alert.alertId);
+                                }}
+                            >
+                                View Details
+                            </Button>
+                        )}
+                        {onDismiss && (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 hover:bg-white/20"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDismiss(alert.alertId);
+                                }}
+                            >
+                                Dismiss
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+        </EducationalTooltip>
     );
 }

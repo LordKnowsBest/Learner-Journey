@@ -8,73 +8,102 @@ body {
 
 @layer base {
   :root {
-    --background: 240 67% 97%;
-    --foreground: 240 10% 3.9%;
+    /* KAITE Brand Colors - Light Mode */
+    /* Primary: Deep Purple - HSL: 260 70% 55% */
+    /* Secondary: Lime Green - HSL: 74 85% 65% */
+    /* Accent: Sun Yellow - HSL: 45 100% 55% */
+    
+    --background: 260 20% 98%; /* Very light purple/white tint */
+    --foreground: 260 40% 15%; /* Deep purple-black */
+    
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 260 40% 15%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 274 59% 65%;
+    --popover-foreground: 260 40% 15%;
+    
+    --primary: 260 75% 60%; /* Vibrant Purple */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 5.9% 90%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 5.9% 90%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 0 25% 75%;
-    --accent-foreground: 0 0% 10%;
+    
+    --secondary: 74 85% 65%; /* Lime Green */
+    --secondary-foreground: 260 40% 15%;
+    
+    --muted: 260 20% 94%;
+    --muted-foreground: 260 20% 40%;
+    
+    --accent: 45 100% 55%; /* Sun Yellow */
+    --accent-foreground: 260 40% 15%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 274 59% 65%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --border: 260 20% 85%;
+    --input: 260 20% 85%;
+    --ring: 260 75% 60%;
+    
+    --radius: 0.75rem; /* Larger, softer radius */
+
+    /* Chart colors tailored to the palette */
+    --chart-1: 260 75% 60%;
+    --chart-2: 74 85% 65%;
+    --chart-3: 45 100% 55%;
+    --chart-4: 320 70% 60%;
+    --chart-5: 180 70% 40%;
+
+    --sidebar-background: 260 20% 98%;
+    --sidebar-foreground: 260 40% 15%;
+    --sidebar-primary: 260 75% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 74 85% 65%;
+    --sidebar-accent-foreground: 260 40% 15%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 260 75% 60%;
   }
+
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 274 59% 65%;
+    /* KAITE Brand Colors - Dark Mode */
+    --background: 260 50% 10%; /* Deep Purple/Black */
+    --foreground: 260 10% 98%;
+    
+    --card: 260 50% 12%;
+    --card-foreground: 260 10% 98%;
+    
+    --popover: 260 50% 12%;
+    --popover-foreground: 260 10% 98%;
+    
+    --primary: 260 75% 65%; /* Lighter Purple for contrast */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 0 25% 75%;
-    --accent-foreground: 0 0% 10%;
+    
+    --secondary: 74 85% 65%; /* Lime Green remains vibrant */
+    --secondary-foreground: 260 50% 10%;
+    
+    --muted: 260 40% 20%;
+    --muted-foreground: 260 20% 70%;
+    
+    --accent: 45 100% 55%; /* Yellow remains vibrant */
+    --accent-foreground: 260 50% 10%;
+    
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 274 59% 65%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    
+    --border: 260 40% 25%;
+    --input: 260 40% 25%;
+    --ring: 260 75% 65%;
+    
+    --chart-1: 260 75% 65%;
+    --chart-2: 74 85% 65%;
+    --chart-3: 45 100% 55%;
+    --chart-4: 320 70% 60%;
+    --chart-5: 180 70% 50%;
+    
+    --sidebar-background: 260 50% 8%;
+    --sidebar-foreground: 260 10% 96%;
+    --sidebar-primary: 260 75% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 260 40% 20%;
+    --sidebar-accent-foreground: 260 10% 96%;
+    --sidebar-border: 260 40% 25%;
+    --sidebar-ring: 260 75% 65%;
   }
 }
 

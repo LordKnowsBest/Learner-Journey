@@ -23,7 +23,58 @@ export class LLMSettingsService {
    */
   private loadSettings(): LLMSettings {
     if (!this.isClient) {
-      return DEFAULT_LLM_SETTINGS;
+      // Server-side: Try to load from env vars to ensure functional AI flows
+      const serverSettings = JSON.parse(JSON.stringify(DEFAULT_LLM_SETTINGS));
+
+      if (process.env.GOOGLE_API_KEY) {
+        serverSettings.providers.gemini = {
+          provider: 'gemini',
+          apiKey: process.env.GOOGLE_API_KEY,
+          modelName: PROVIDER_CAPABILITIES.gemini.defaultModel,
+          enabled: true,
+          maxTokens: 1000,
+          temperature: 0.7,
+          priority: 1,
+        } as LLMConfig;
+      }
+
+      if (process.env.GROQ_API_KEY) {
+        serverSettings.providers.groq = {
+          provider: 'groq',
+          apiKey: process.env.GROQ_API_KEY,
+          modelName: PROVIDER_CAPABILITIES.groq.defaultModel,
+          enabled: true,
+          maxTokens: 1000,
+          temperature: 0.7,
+          priority: 1,
+        } as LLMConfig;
+      }
+
+      if (process.env.OPENAI_API_KEY) {
+        serverSettings.providers.openai = {
+          provider: 'openai',
+          apiKey: process.env.OPENAI_API_KEY,
+          modelName: PROVIDER_CAPABILITIES.openai.defaultModel,
+          enabled: true,
+          maxTokens: 1000,
+          temperature: 0.7,
+          priority: 2,
+        } as LLMConfig;
+      }
+
+      if (process.env.ANTHROPIC_API_KEY) {
+        serverSettings.providers.anthropic = {
+          provider: 'anthropic',
+          apiKey: process.env.ANTHROPIC_API_KEY,
+          modelName: PROVIDER_CAPABILITIES.anthropic.defaultModel,
+          enabled: true,
+          maxTokens: 1000,
+          temperature: 0.7,
+          priority: 2,
+        } as LLMConfig;
+      }
+
+      return serverSettings;
     }
 
     try {

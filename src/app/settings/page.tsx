@@ -10,9 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EducationalTooltip } from "@/components/ui/educational-tooltip";
+import { ethicalTooltipDefinitions } from "@/lib/ethical-design-tooltips";
 import { getLLMSettingsService } from "@/lib/llm-settings";
 import { PROVIDER_CAPABILITIES, type LLMProvider, type TaskType, type LLMSettings } from "@/lib/llm-types";
-import { Check, X, Settings as SettingsIcon, Zap, DollarSign, Clock, Key } from "lucide-react";
+import { Check, X, Settings as SettingsIcon, Zap, DollarSign, Clock, Key, HelpCircle } from "lucide-react";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<LLMSettings | null>(null);
@@ -111,10 +113,16 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto p-8 max-w-6xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <SettingsIcon className="w-8 h-8" />
-          LLM Router Settings
-        </h1>
+        <EducationalTooltip
+          definition={ethicalTooltipDefinitions.settings_llm_router}
+          side="bottom"
+        >
+          <h1 className="text-3xl font-bold flex items-center gap-2 cursor-help">
+            <SettingsIcon className="w-8 h-8" />
+            LLM Router Settings
+            <HelpCircle className="w-5 h-5 text-muted-foreground" />
+          </h1>
+        </EducationalTooltip>
         <p className="text-muted-foreground mt-2">
           Configure multiple AI providers and automatic routing for optimal performance
         </p>
@@ -131,8 +139,22 @@ export default function SettingsPage() {
 
       <Tabs defaultValue="providers" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="providers">API Providers</TabsTrigger>
-          <TabsTrigger value="routing">Task Routing</TabsTrigger>
+          <EducationalTooltip
+            definition={ethicalTooltipDefinitions.settings_api_providers}
+            side="bottom"
+          >
+            <TabsTrigger value="providers" className="cursor-help">
+              API Providers
+            </TabsTrigger>
+          </EducationalTooltip>
+          <EducationalTooltip
+            definition={ethicalTooltipDefinitions.settings_task_routing}
+            side="bottom"
+          >
+            <TabsTrigger value="routing" className="cursor-help">
+              Task Routing
+            </TabsTrigger>
+          </EducationalTooltip>
         </TabsList>
 
         {/* Providers Tab */}
@@ -171,7 +193,15 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor={`${provider}-key`}>API Key</Label>
+                    <EducationalTooltip
+                      definition={ethicalTooltipDefinitions.settings_privacy_note}
+                      side="right"
+                    >
+                      <Label htmlFor={`${provider}-key`} className="cursor-help flex items-center gap-1">
+                        API Key
+                        <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                      </Label>
+                    </EducationalTooltip>
                     <Input
                       id={`${provider}-key`}
                       type="password"
@@ -204,14 +234,19 @@ export default function SettingsPage() {
                     </Alert>
                   )}
 
-                  <Button
-                    onClick={() => testProvider(provider as LLMProvider)}
-                    disabled={!isEnabled || isTesting[provider]}
-                    variant="outline"
-                    className="w-full"
+                  <EducationalTooltip
+                    definition={ethicalTooltipDefinitions.settings_provider_test}
+                    side="top"
                   >
-                    {isTesting[provider] ? "Testing..." : "Test Connection"}
-                  </Button>
+                    <Button
+                      onClick={() => testProvider(provider as LLMProvider)}
+                      disabled={!isEnabled || isTesting[provider]}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {isTesting[provider] ? "Testing..." : "Test Connection"}
+                    </Button>
+                  </EducationalTooltip>
                 </CardContent>
               </Card>
             );
@@ -222,7 +257,15 @@ export default function SettingsPage() {
         <TabsContent value="routing" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Task-Based Routing</CardTitle>
+              <EducationalTooltip
+                definition={ethicalTooltipDefinitions.settings_task_routing}
+                side="right"
+              >
+                <CardTitle className="flex items-center gap-2 cursor-help">
+                  Task-Based Routing
+                  <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                </CardTitle>
+              </EducationalTooltip>
               <CardDescription>
                 Assign specific AI providers to different task types for optimal performance
               </CardDescription>

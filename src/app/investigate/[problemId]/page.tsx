@@ -8,12 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { EducationalTooltip } from "@/components/ui/educational-tooltip";
+import { ethicalTooltipDefinitions } from "@/lib/ethical-design-tooltips";
 import { getProblemById, getConceptById } from "@/lib/data";
 import { useSession } from "@/context/SessionContext";
 import { useExplainability } from "@/context/ExplainabilityContext";
@@ -96,6 +92,42 @@ export default function InvestigatePage() {
       setNotes(currentProgress.investigationNotes);
     }
   }, [currentProgress]);
+
+  // Simulate AI Learning Path Analysis (Demo Feature)
+  useEffect(() => {
+    if (problem) {
+      const timer = setTimeout(() => {
+        updatePathExplanation({
+          currentPath: {
+            problemId: problem.id,
+            phaseId: currentProgress?.currentPhaseId || 'phase-1',
+            suggestedConcepts: problem.coreConcepts.slice(0, 3),
+          },
+          reasoning: "Based on your interest in the scenario, I've prioritized concepts related to Algorithmic Bias and Fairness. Your path is optimized for a 'Discovery' approach.",
+          adaptations: [
+            {
+              trigger: "Initial Assessment",
+              change: "Added 'Algorithmic Bias' as a foundational concept.",
+              benefit: "Ensures you have the necessary vocabulary for this investigation."
+            },
+            {
+              trigger: "Student Preference",
+              change: "Enabled 'Socratic Mode' for deeper engagement.",
+              benefit: "Encourages critical thinking rather than just finding answers."
+            }
+          ],
+          studentProfile: {
+            strengths: ["Critical Thinking"],
+            areasForGrowth: ["Technical Definitions"],
+            learningPace: "moderate",
+            preferredMode: "socratic"
+          }
+        });
+      }, 3000); // 3 second delay to simulate analysis
+
+      return () => clearTimeout(timer);
+    }
+  }, [problem, updatePathExplanation, currentProgress]);
 
   // Check if we're in reflection mode (moved to top level)
   useEffect(() => {
@@ -193,7 +225,7 @@ export default function InvestigatePage() {
 
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <>
       <div className="container mx-auto p-4 py-6">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
@@ -213,23 +245,32 @@ export default function InvestigatePage() {
             <div className="flex items-start gap-4">
               {/* AI Transparency Toggle */}
               <ExplainabilityToggle />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="text-right cursor-help">
-                    <p className="text-sm text-muted-foreground flex items-center gap-1 justify-end">
-                      Progress
-                      <HelpCircle className="w-3 h-3" />
-                    </p>
-                    <Progress value={progressPercent} className="w-32 mt-1" />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {completedPhasesCount} / {problem.phases.length} phases
-                    </p>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Your progress through this investigation. Complete all phases to unlock reflection.</p>
-                </TooltipContent>
-              </Tooltip>
+              <EducationalTooltip
+                definition={{
+                  id: "investigation_progress",
+                  component: "InvestigatePage",
+                  content: "Your progress through this investigation. Complete all phases to unlock reflection.",
+                  ethicalDesign: {
+                    principle: "Progress Visualization",
+                    rationale: "Clear progress indicators motivate continued engagement without pressure.",
+                    category: "engagement" as const,
+                  },
+                  pedagogy: "Progress tracking supports goal-setting and self-regulation.",
+                  technical: "Progress calculated as completed phases / total phases.",
+                }}
+                side="left"
+              >
+                <div className="text-right cursor-help">
+                  <p className="text-sm text-muted-foreground flex items-center gap-1 justify-end">
+                    Progress
+                    <HelpCircle className="w-3 h-3" />
+                  </p>
+                  <Progress value={progressPercent} className="w-32 mt-1" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {completedPhasesCount} / {problem.phases.length} phases
+                  </p>
+                </div>
+              </EducationalTooltip>
             </div>
           </div>
 
@@ -258,50 +299,83 @@ export default function InvestigatePage() {
             <div className="lg:col-span-2 space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-4">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <TabsTrigger value="scenario" className="flex items-center gap-1">
-                        <BookOpen className="w-4 h-4" />
-                        <span className="hidden sm:inline">Scenario</span>
-                      </TabsTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Read the problem scenario and understand the stakeholders involved</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <TabsTrigger value="investigate" className="flex items-center gap-1">
-                        <Lightbulb className="w-4 h-4" />
-                        <span className="hidden sm:inline">Investigate</span>
-                      </TabsTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Work through investigation phases and discover key concepts</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <TabsTrigger value="chat" className="flex items-center gap-1">
-                        <MessageCircle className="w-4 h-4" />
-                        <span className="hidden sm:inline">Ask Guide</span>
-                      </TabsTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Chat with the AI tutor who will ask questions to deepen your thinking</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <TabsTrigger value="notes" className="flex items-center gap-1">
-                        <FileText className="w-4 h-4" />
-                        <span className="hidden sm:inline">Notes</span>
-                      </TabsTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Write down your thoughts, questions, and discoveries</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <EducationalTooltip
+                    definition={{
+                      id: "tab_scenario",
+                      component: "InvestigatePage",
+                      content: "Read the problem scenario and understand the stakeholders involved.",
+                      ethicalDesign: {
+                        principle: "Context First",
+                        rationale: "Understanding context before analysis ensures informed decision-making.",
+                        category: "transparency" as const,
+                      },
+                      pedagogy: "Scenario-based learning connects abstract ethics to concrete situations.",
+                    }}
+                    side="bottom"
+                  >
+                    <TabsTrigger value="scenario" className="flex items-center gap-1">
+                      <BookOpen className="w-4 h-4" />
+                      <span className="hidden sm:inline">Scenario</span>
+                    </TabsTrigger>
+                  </EducationalTooltip>
+                  <EducationalTooltip
+                    definition={{
+                      id: "tab_investigate",
+                      component: "InvestigatePage",
+                      content: "Work through investigation phases and discover key concepts.",
+                      ethicalDesign: {
+                        principle: "Guided Discovery",
+                        rationale: "Structured phases support systematic ethical analysis.",
+                        category: "engagement" as const,
+                      },
+                      pedagogy: "Phased investigation builds understanding progressively.",
+                    }}
+                    side="bottom"
+                  >
+                    <TabsTrigger value="investigate" className="flex items-center gap-1">
+                      <Lightbulb className="w-4 h-4" />
+                      <span className="hidden sm:inline">Investigate</span>
+                    </TabsTrigger>
+                  </EducationalTooltip>
+                  <EducationalTooltip
+                    definition={{
+                      id: "tab_chat",
+                      component: "InvestigatePage",
+                      content: "Chat with the AI tutor who will ask questions to deepen your thinking.",
+                      ethicalDesign: {
+                        principle: "Socratic Guidance",
+                        rationale: "Questions promote self-discovery over direct instruction.",
+                        category: "autonomy" as const,
+                        references: ["Socratic Method"],
+                      },
+                      pedagogy: "AI guide asks questions to help you think, not give answers.",
+                    }}
+                    side="bottom"
+                  >
+                    <TabsTrigger value="chat" className="flex items-center gap-1">
+                      <MessageCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">Ask Guide</span>
+                    </TabsTrigger>
+                  </EducationalTooltip>
+                  <EducationalTooltip
+                    definition={{
+                      id: "tab_notes",
+                      component: "InvestigatePage",
+                      content: "Write down your thoughts, questions, and discoveries.",
+                      ethicalDesign: {
+                        principle: "Learner Reflection",
+                        rationale: "Note-taking supports metacognition and deeper processing.",
+                        category: "autonomy" as const,
+                      },
+                      pedagogy: "Writing thoughts helps consolidate learning and reveal gaps.",
+                    }}
+                    side="bottom"
+                  >
+                    <TabsTrigger value="notes" className="flex items-center gap-1">
+                      <FileText className="w-4 h-4" />
+                      <span className="hidden sm:inline">Notes</span>
+                    </TabsTrigger>
+                  </EducationalTooltip>
                 </TabsList>
 
                 {/* Scenario Tab */}
@@ -322,18 +396,28 @@ export default function InvestigatePage() {
                   {/* Stakeholders */}
                   <Card>
                     <CardHeader>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <CardTitle className="flex items-center gap-2 cursor-help">
-                            <Users className="w-5 h-5" />
-                            People Involved
-                            <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                          </CardTitle>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>Stakeholders are people affected by this situation. Understanding their different viewpoints is key to ethical analysis.</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <EducationalTooltip
+                        definition={{
+                          id: "stakeholders_section",
+                          component: "InvestigatePage",
+                          content: "Stakeholders are people affected by this situation. Understanding their different viewpoints is key to ethical analysis.",
+                          ethicalDesign: {
+                            principle: "Multi-Stakeholder Perspective",
+                            rationale: "Ethical decisions require considering all affected parties.",
+                            category: "fairness" as const,
+                            references: ["Value Sensitive Design", "Stakeholder Theory"],
+                          },
+                          pedagogy: "Identifying stakeholders develops systems thinking and empathy.",
+                          technical: "Stakeholders defined per scenario with roles and perspectives.",
+                        }}
+                        side="right"
+                      >
+                        <CardTitle className="flex items-center gap-2 cursor-help">
+                          <Users className="w-5 h-5" />
+                          People Involved
+                          <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                        </CardTitle>
+                      </EducationalTooltip>
                       <CardDescription>
                         Consider each person's perspective
                       </CardDescription>
@@ -341,26 +425,35 @@ export default function InvestigatePage() {
                     <CardContent>
                       <div className="grid gap-3">
                         {problem.stakeholders.map((stakeholder) => (
-                          <Tooltip key={stakeholder.name}>
-                            <TooltipTrigger asChild>
-                              <div className="p-3 rounded-lg bg-muted/50 cursor-help hover:bg-muted transition-colors">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-semibold">
-                                    {stakeholder.name}
-                                  </span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {stakeholder.role}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  {stakeholder.perspective}
-                                </p>
+                          <EducationalTooltip
+                            key={stakeholder.name}
+                            definition={{
+                              id: `stakeholder_${stakeholder.name.replace(/\s/g, '_').toLowerCase()}`,
+                              component: "InvestigatePage",
+                              content: `Think about: How might ${stakeholder.name}'s interests conflict with others? What would be fair from their point of view?`,
+                              ethicalDesign: {
+                                principle: "Perspective-Taking",
+                                rationale: "Understanding different viewpoints is essential for ethical reasoning.",
+                                category: "fairness" as const,
+                              },
+                              pedagogy: `${stakeholder.name}'s perspective helps you consider diverse impacts.`,
+                            }}
+                            side="top"
+                          >
+                            <div className="p-3 rounded-lg bg-muted/50 cursor-help hover:bg-muted transition-colors">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-semibold">
+                                  {stakeholder.name}
+                                </span>
+                                <Badge variant="outline" className="text-xs">
+                                  {stakeholder.role}
+                                </Badge>
                               </div>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <p>Think about: How might {stakeholder.name}'s interests conflict with others? What would be fair from their point of view?</p>
-                            </TooltipContent>
-                          </Tooltip>
+                              <p className="text-sm text-muted-foreground">
+                                {stakeholder.perspective}
+                              </p>
+                            </div>
+                          </EducationalTooltip>
                         ))}
                       </div>
                     </CardContent>
@@ -500,17 +593,27 @@ export default function InvestigatePage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <CardTitle className="flex items-center gap-2 cursor-help">
-                        Concepts Discovered
-                        <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                      </CardTitle>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>Key AI ethics concepts you've uncovered during your investigation. Click any concept to learn more and see related resources.</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <EducationalTooltip
+                    definition={{
+                      id: "concepts_discovered",
+                      component: "InvestigatePage",
+                      content: "Key AI ethics concepts you've uncovered during your investigation. Click any concept to learn more and see related resources.",
+                      ethicalDesign: {
+                        principle: "Discovery Learning",
+                        rationale: "Students discover concepts through investigation rather than direct instruction.",
+                        category: "autonomy" as const,
+                        references: ["Constructivist Learning Theory"],
+                      },
+                      pedagogy: "Active discovery leads to deeper understanding and retention.",
+                      technical: "Concepts revealed when phase conditions are met.",
+                    }}
+                    side="left"
+                  >
+                    <CardTitle className="flex items-center gap-2 cursor-help">
+                      Concepts Discovered
+                      <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                    </CardTitle>
+                  </EducationalTooltip>
                   <CardDescription>
                     {currentProgress.discoveredConcepts.length} concepts found
                   </CardDescription>
@@ -544,17 +647,27 @@ export default function InvestigatePage() {
               {currentPhase && currentPhase.hints.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <CardTitle className="text-sm flex items-center gap-1 cursor-help">
-                          Need a hint?
-                          <HelpCircle className="w-3 h-3 text-muted-foreground" />
-                        </CardTitle>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>If you're stuck, these hints can help guide your thinking without giving away the answer.</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <EducationalTooltip
+                      definition={{
+                        id: "investigation_hints",
+                        component: "InvestigatePage",
+                        content: "If you're stuck, these hints can help guide your thinking without giving away the answer.",
+                        ethicalDesign: {
+                          principle: "Scaffolded Support",
+                          rationale: "Hints provide gentle nudges that maintain learner agency.",
+                          category: "autonomy" as const,
+                          references: ["Zone of Proximal Development"],
+                        },
+                        pedagogy: "Progressive hints support struggle without frustration.",
+                        technical: "Hints revealed on demand, usage tracked for adaptation.",
+                      }}
+                      side="left"
+                    >
+                      <CardTitle className="text-sm flex items-center gap-1 cursor-help">
+                        Need a hint?
+                        <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                      </CardTitle>
+                    </EducationalTooltip>
                   </CardHeader>
                   <CardContent>
                     <details className="cursor-pointer">
@@ -578,10 +691,10 @@ export default function InvestigatePage() {
             </div>
           </div>
         </div>
-      </div >
+      </div>
 
       {/* Explainability Sidebar for Stakeholder Trust */}
-      < ExplainabilitySidebar />
+      <ExplainabilitySidebar />
 
       {/* Lesson Path Modal */}
       {showLesson && (
@@ -602,16 +715,23 @@ export default function InvestigatePage() {
                   const concept = getConceptById(conceptId);
                   if (!concept) return null;
                   return (
-                    <div key={conceptId} className="group relative">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000"></div>
-                      <ConceptCard
-                        concept={concept}
-                        mastery={session.conceptMastery[conceptId] || 0}
-                      />
-                      <div className="absolute top-2 right-2">
-                        <Badge variant="secondary" className="shadow-sm">
-                          +{concept.xpValue} XP
-                        </Badge>
+                    <div key={conceptId} className="group relative bg-card rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-all">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-headline text-lg">{concept.title}</h4>
+                          <Badge variant="secondary">+{concept.xpValue} XP</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                          {concept.description}
+                        </p>
+                        <Button
+                          className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                          onClick={() => router.push(`/learn/${conceptId}`)}
+                        >
+                          <Play className="w-4 h-4 mr-2 fill-current" />
+                          Start Lesson
+                        </Button>
                       </div>
                     </div>
                   );
@@ -628,6 +748,6 @@ export default function InvestigatePage() {
           </Card>
         </div>
       )}
-    </TooltipProvider >
+    </>
   );
 }

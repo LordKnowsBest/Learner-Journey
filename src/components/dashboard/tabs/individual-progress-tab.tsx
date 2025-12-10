@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Download } from "lucide-react";
+import { Search, Filter, Download, HelpCircle } from "lucide-react";
 import { MOCK_STUDENTS } from "@/lib/teacher-data";
 import { StudentPill } from "@/components/dashboard/student-pill";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { EducationalTooltip } from "@/components/ui/educational-tooltip";
+import { ethicalTooltipDefinitions } from "@/lib/ethical-design-tooltips";
 
 export function IndividualProgressTab() {
     return (
@@ -22,24 +23,49 @@ export function IndividualProgressTab() {
                         <Filter className="w-4 h-4" />
                         Filter
                     </Button>
-                    <Button variant="outline" size="sm" className="h-9 gap-2">
-                        <Download className="w-4 h-4" />
-                        Export View
-                    </Button>
+                    <EducationalTooltip
+                        definition={ethicalTooltipDefinitions.report_export_csv}
+                        side="bottom"
+                    >
+                        <Button variant="outline" size="sm" className="h-9 gap-2">
+                            <Download className="w-4 h-4" />
+                            Export View
+                        </Button>
+                    </EducationalTooltip>
                 </div>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Detailed Progress Tracking</CardTitle>
-                    <CardDescription>Comprehensive view of student performance across all modules.</CardDescription>
+                    <EducationalTooltip
+                        definition={ethicalTooltipDefinitions.tab_individual_progress}
+                        side="right"
+                    >
+                        <div className="cursor-help">
+                            <CardTitle className="flex items-center gap-2">
+                                Detailed Progress Tracking
+                                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </CardTitle>
+                            <CardDescription>Comprehensive view of student performance across all modules.</CardDescription>
+                        </div>
+                    </EducationalTooltip>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Student</TableHead>
-                                <TableHead>Current Module</TableHead>
+                                <TableHead>
+                                    <EducationalTooltip
+                                        definition={ethicalTooltipDefinitions.student_status_pill}
+                                        side="top"
+                                    >
+                                        <span className="cursor-help flex items-center gap-1">
+                                            Current Module
+                                            <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                        </span>
+                                    </EducationalTooltip>
+                                </TableHead>
                                 <TableHead>Improvement</TableHead>
                                 <TableHead>Last Assessment</TableHead>
                                 <TableHead className="text-right">Action</TableHead>
@@ -61,19 +87,32 @@ export function IndividualProgressTab() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <span className={`text-xs font-semibold px-2 py-1 rounded-full ${student.gradeTrend === 'up' ? 'bg-green-100 text-green-700' :
-                                                    student.gradeTrend === 'down' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
-                                                    }`}>
-                                                    {student.gradeTrend === 'up' ? '↗ Increasing' : student.gradeTrend === 'down' ? '↘ Needs Support' : '→ Stable'}
-                                                </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>{student.gradeTrend === 'up' ? '+5% avg over last 3 sessions' :
-                                                    student.gradeTrend === 'down' ? 'Dropped below 70% threshold' : 'Consistent performance'}</p>
-                                            </TooltipContent>
-                                        </Tooltip>
+                                        <EducationalTooltip
+                                            definition={{
+                                                id: "grade_trend",
+                                                component: "IndividualProgressTab",
+                                                content: student.gradeTrend === 'up'
+                                                    ? '+5% avg over last 3 sessions'
+                                                    : student.gradeTrend === 'down'
+                                                    ? 'Dropped below 70% threshold'
+                                                    : 'Consistent performance',
+                                                ethicalDesign: {
+                                                    principle: "Growth-Oriented Feedback",
+                                                    rationale: "Trends show trajectory, not judgment. Every student can improve.",
+                                                    category: "fairness",
+                                                },
+                                                pedagogy: "Trend indicators help identify students who may need support.",
+                                            }}
+                                            side="top"
+                                        >
+                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full cursor-help ${
+                                                student.gradeTrend === 'up' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                                                student.gradeTrend === 'down' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                            }`}>
+                                                {student.gradeTrend === 'up' ? '↗ Increasing' : student.gradeTrend === 'down' ? '↘ Needs Support' : '→ Stable'}
+                                            </span>
+                                        </EducationalTooltip>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">

@@ -2,8 +2,9 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Lock, PlayCircle, Clock } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CheckCircle, Lock, PlayCircle, Clock, HelpCircle } from "lucide-react";
+import { EducationalTooltip } from "@/components/ui/educational-tooltip";
+import { ethicalTooltipDefinitions } from "@/lib/ethical-design-tooltips";
 
 export function LearningPathsTab() {
     const modules = [
@@ -18,8 +19,18 @@ export function LearningPathsTab() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card className="md:col-span-2">
                     <CardHeader>
-                        <CardTitle>Class Curriculum Velocity</CardTitle>
-                        <CardDescription>Real-time view of where students are in the learning journey.</CardDescription>
+                        <EducationalTooltip
+                            definition={ethicalTooltipDefinitions.tab_learning_paths}
+                            side="right"
+                        >
+                            <div className="cursor-help">
+                                <CardTitle className="flex items-center gap-2">
+                                    Class Curriculum Velocity
+                                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                                </CardTitle>
+                                <CardDescription>Real-time view of where students are in the learning journey.</CardDescription>
+                            </div>
+                        </EducationalTooltip>
                     </CardHeader>
                     <CardContent>
                         <div className="relative border-l-2 border-muted pl-6 space-y-8 ml-4 my-2">
@@ -51,16 +62,28 @@ export function LearningPathsTab() {
                                                 <span>Completion Rate</span>
                                                 <span>{mod.completion}%</span>
                                             </div>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div className="cursor-help">
-                                                        <Progress value={mod.completion} className="h-2" />
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    <p>{mod.status === 'completed' ? 'All students passed' : `${mod.completion}% of class has passed Mastery Gate`}</p>
-                                                </TooltipContent>
-                                            </Tooltip>
+                                            <EducationalTooltip
+                                                definition={{
+                                                    id: `module_completion_${i}`,
+                                                    component: "LearningPathsTab",
+                                                    content: mod.status === 'completed'
+                                                        ? 'All students passed'
+                                                        : `${mod.completion}% of class has passed Mastery Gate`,
+                                                    ethicalDesign: {
+                                                        principle: "Mastery-Based Progression",
+                                                        rationale: "Progress shows class readiness, not a race. Every student can achieve mastery.",
+                                                        category: "fairness",
+                                                        references: ["Bloom's Mastery Learning"],
+                                                    },
+                                                    pedagogy: "Mastery gates ensure foundational understanding before progression.",
+                                                    technical: "Threshold: 70% on mastery assessment.",
+                                                }}
+                                                side="top"
+                                            >
+                                                <div className="cursor-help">
+                                                    <Progress value={mod.completion} className="h-2" />
+                                                </div>
+                                            </EducationalTooltip>
                                         </div>
                                     )}
                                 </div>
@@ -70,37 +93,53 @@ export function LearningPathsTab() {
                 </Card>
 
                 <div className="space-y-4">
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base">Pacing Alert</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex items-start gap-4">
-                                <Clock className="w-8 h-8 text-orange-500 bg-orange-100 p-1.5 rounded-lg" />
-                                <div>
-                                    <p className="text-sm font-medium">Behind Schedule</p>
-                                    <p className="text-xs text-muted-foreground mt-1">3 students are stuck on Module 2 for {'>'} 3 days.</p>
+                    <EducationalTooltip
+                        definition={ethicalTooltipDefinitions.pacing_alert}
+                        side="left"
+                    >
+                        <Card className="cursor-help">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-base flex items-center gap-2">
+                                    Pacing Alert
+                                    <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-start gap-4">
+                                    <Clock className="w-8 h-8 text-orange-500 bg-orange-100 dark:bg-orange-900/30 p-1.5 rounded-lg" />
+                                    <div>
+                                        <p className="text-sm font-medium">Behind Schedule</p>
+                                        <p className="text-xs text-muted-foreground mt-1">3 students are stuck on Module 2 for {'>'} 3 days.</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base">Content Insights</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <div className="text-sm">
-                                    <p className="font-medium text-green-600">Most Engaging</p>
-                                    <p className="text-xs text-muted-foreground">"The Ethics of Self-Driving Cars"</p>
+                            </CardContent>
+                        </Card>
+                    </EducationalTooltip>
+                    <EducationalTooltip
+                        definition={ethicalTooltipDefinitions.content_insights}
+                        side="left"
+                    >
+                        <Card className="cursor-help">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-base flex items-center gap-2">
+                                    Content Insights
+                                    <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <div className="text-sm">
+                                        <p className="font-medium text-green-600 dark:text-green-400">Most Engaging</p>
+                                        <p className="text-xs text-muted-foreground">"The Ethics of Self-Driving Cars"</p>
+                                    </div>
+                                    <div className="text-sm">
+                                        <p className="font-medium text-red-600 dark:text-red-400">High Friction</p>
+                                        <p className="text-xs text-muted-foreground">"Understanding Algorithmic Bias"</p>
+                                    </div>
                                 </div>
-                                <div className="text-sm">
-                                    <p className="font-medium text-red-600">High Friction</p>
-                                    <p className="text-xs text-muted-foreground">"Understanding Algorithmic Bias"</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </EducationalTooltip>
                 </div>
             </div>
         </div>

@@ -4,6 +4,11 @@ import { AppHeader } from "@/components/header";
 import { Toaster } from "@/components/ui/toaster";
 import { BadgeNotification } from "@/components/gamification/badge-notification";
 import { GamificationProvider } from "@/context/GamificationContext";
+import { SessionProvider } from "@/context/SessionContext";
+import { ExplainabilityProvider } from "@/context/ExplainabilityContext";
+import { TooltipLayerProvider } from "@/context/TooltipLayerContext";
+import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "KAITE Demo",
@@ -26,12 +31,27 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <GamificationProvider>
-          <AppHeader />
-          <main>{children}</main>
-          <BadgeNotification />
-          <Toaster />
-        </GamificationProvider>
+        <TooltipProvider delayDuration={300}>
+          <TooltipLayerProvider>
+            <SessionProvider>
+              <ExplainabilityProvider>
+                <GamificationProvider>
+                  <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                  >
+                    <AppHeader />
+                    <main>{children}</main>
+                    <BadgeNotification />
+                    <Toaster />
+                  </ThemeProvider>
+                </GamificationProvider>
+              </ExplainabilityProvider>
+            </SessionProvider>
+          </TooltipLayerProvider>
+        </TooltipProvider>
       </body>
     </html>
   );

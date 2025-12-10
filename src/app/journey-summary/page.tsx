@@ -5,9 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { EducationalTooltip } from "@/components/ui/educational-tooltip";
+import { ethicalTooltipDefinitions } from "@/lib/ethical-design-tooltips";
 import { useSession } from "@/context/SessionContext";
 import { conceptResources, problemScenarios, getConceptById, conceptLinks } from "@/lib/data";
 import { ConceptCard } from "@/components/concept-card";
+import { BadgeShowcase } from "@/components/gamification/badge-showcase";
 import {
   Trophy,
   Lightbulb,
@@ -18,11 +21,15 @@ import {
   BookOpen,
   RefreshCw,
   Network,
+  HelpCircle,
+  Award,
+  GraduationCap,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function JourneySummaryPage() {
   const router = useRouter();
-  const { session, startNewSession } = useSession();
+  const { session, legacySession, startNewSession } = useSession();
 
   const completedProblems = session.problemsProgress.filter(
     (p) => p.status === "completed"
@@ -66,7 +73,15 @@ export default function JourneySummaryPage() {
           <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
             <Trophy className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold">Your Learning Journey</h1>
+          <EducationalTooltip
+            definition={ethicalTooltipDefinitions.journey_overview}
+            side="bottom"
+          >
+            <h1 className="text-3xl font-bold cursor-help flex items-center justify-center gap-2">
+              Your Learning Journey
+              <HelpCircle className="w-5 h-5 text-muted-foreground" />
+            </h1>
+          </EducationalTooltip>
           <p className="text-muted-foreground text-lg">
             Here's what you've accomplished exploring AI ethics
           </p>
@@ -74,51 +89,99 @@ export default function JourneySummaryPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Target className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-3xl font-bold">{completedProblems.length}</p>
-              <p className="text-sm text-muted-foreground">
-                Problems Solved
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Lightbulb className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-3xl font-bold">{discoveredConcepts}</p>
-              <p className="text-sm text-muted-foreground">
-                Concepts Discovered
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Sparkles className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-3xl font-bold">{masteryAvg}%</p>
-              <p className="text-sm text-muted-foreground">
-                Average Mastery
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <Network className="w-8 h-8 text-primary mx-auto mb-2" />
-              <p className="text-3xl font-bold">{discoveredLinks.length}</p>
-              <p className="text-sm text-muted-foreground">
-                Connections Made
-              </p>
-            </CardContent>
-          </Card>
+          <EducationalTooltip
+            definition={ethicalTooltipDefinitions.stat_problems_solved}
+            side="bottom"
+          >
+            <Card className="cursor-help">
+              <CardContent className="pt-6 text-center">
+                <Target className="w-8 h-8 text-primary mx-auto mb-2" />
+                <p className="text-3xl font-bold">{completedProblems.length}</p>
+                <p className="text-sm text-muted-foreground">
+                  Problems Solved
+                </p>
+              </CardContent>
+            </Card>
+          </EducationalTooltip>
+          <EducationalTooltip
+            definition={ethicalTooltipDefinitions.stat_concepts_discovered}
+            side="bottom"
+          >
+            <Card className="cursor-help">
+              <CardContent className="pt-6 text-center">
+                <Lightbulb className="w-8 h-8 text-primary mx-auto mb-2" />
+                <p className="text-3xl font-bold">{discoveredConcepts}</p>
+                <p className="text-sm text-muted-foreground">
+                  Concepts Discovered
+                </p>
+              </CardContent>
+            </Card>
+          </EducationalTooltip>
+          <EducationalTooltip
+            definition={ethicalTooltipDefinitions.stat_average_mastery}
+            side="bottom"
+          >
+            <Card className="cursor-help">
+              <CardContent className="pt-6 text-center">
+                <Sparkles className="w-8 h-8 text-primary mx-auto mb-2" />
+                <p className="text-3xl font-bold">{masteryAvg}%</p>
+                <p className="text-sm text-muted-foreground">
+                  Average Mastery
+                </p>
+              </CardContent>
+            </Card>
+          </EducationalTooltip>
+          <EducationalTooltip
+            definition={ethicalTooltipDefinitions.stat_connections_made}
+            side="bottom"
+          >
+            <Card className="cursor-help">
+              <CardContent className="pt-6 text-center">
+                <Network className="w-8 h-8 text-primary mx-auto mb-2" />
+                <p className="text-3xl font-bold">{discoveredLinks.length}</p>
+                <p className="text-sm text-muted-foreground">
+                  Connections Made
+                </p>
+              </CardContent>
+            </Card>
+          </EducationalTooltip>
         </div>
+
+        {/* Badge Collection */}
+        <EducationalTooltip
+          definition={{
+            id: "badge_collection",
+            component: "JourneySummaryPage",
+            content: "Badges earned through your learning journey - each representing a milestone achievement.",
+            ethicalDesign: {
+              principle: "Achievement Recognition",
+              rationale: "Visual badges celebrate progress without creating unhealthy competition.",
+              category: "engagement" as const,
+              references: ["Self-Determination Theory", "Gamification Research"],
+            },
+            pedagogy: "Badges tied to meaningful learning milestones reinforce intrinsic motivation.",
+            technical: "Badges automatically awarded when progress metrics meet unlock criteria.",
+          }}
+          side="top"
+        >
+          <div className="cursor-help">
+            <BadgeShowcase showCategories={true} showProgress={true} />
+          </div>
+        </EducationalTooltip>
 
         {/* Concept Mastery */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="w-5 h-5" />
-              Concept Mastery
-            </CardTitle>
+            <EducationalTooltip
+              definition={ethicalTooltipDefinitions.concept_mastery_progress}
+              side="right"
+            >
+              <CardTitle className="flex items-center gap-2 cursor-help">
+                <Lightbulb className="w-5 h-5" />
+                Concept Mastery
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+              </CardTitle>
+            </EducationalTooltip>
             <CardDescription>
               {discoveredConcepts} of {totalConcepts} concepts explored
             </CardDescription>
@@ -156,10 +219,16 @@ export default function JourneySummaryPage() {
         {discoveredLinks.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Network className="w-5 h-5" />
-                Connections You've Made
-              </CardTitle>
+              <EducationalTooltip
+                definition={ethicalTooltipDefinitions.concept_connections}
+                side="right"
+              >
+                <CardTitle className="flex items-center gap-2 cursor-help">
+                  <Network className="w-5 h-5" />
+                  Connections You've Made
+                  <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                </CardTitle>
+              </EducationalTooltip>
               <CardDescription>
                 How the concepts relate to each other
               </CardDescription>
@@ -192,10 +261,28 @@ export default function JourneySummaryPage() {
         {completedProblems.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                Problems You've Investigated
-              </CardTitle>
+              <EducationalTooltip
+                definition={{
+                  id: "problems_investigated",
+                  component: "JourneySummaryPage",
+                  content: "Ethical dilemmas you've fully explored, including investigation and reflection phases.",
+                  ethicalDesign: {
+                    principle: "Engagement History",
+                    rationale: "Reviewing completed problems reinforces learning and shows progress.",
+                    category: "engagement" as const,
+                    references: ["Spaced Repetition Research"],
+                  },
+                  pedagogy: "Seeing completed work builds confidence and encourages continued exploration.",
+                  technical: "Problems marked complete after all phases and reflections submitted.",
+                }}
+                side="right"
+              >
+                <CardTitle className="flex items-center gap-2 cursor-help">
+                  <Target className="w-5 h-5" />
+                  Problems You've Investigated
+                  <HelpCircle className="w-4 h-4 text-muted-foreground" />
+                </CardTitle>
+              </EducationalTooltip>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -225,13 +312,122 @@ export default function JourneySummaryPage() {
           </Card>
         )}
 
+        {/* Post-Test Call-to-Action */}
+        {legacySession.diagnosticScore !== null && completedProblems.length > 0 && legacySession.postTestScore === null && (
+          <EducationalTooltip
+            definition={{
+              id: "post_test_cta",
+              component: "JourneySummaryPage",
+              content: "Take the final assessment to measure your learning progress.",
+              ethicalDesign: {
+                principle: "Growth Measurement",
+                rationale: "Post-tests celebrate learning gains rather than judging absolute performance.",
+                category: "engagement" as const,
+                references: ["Formative Assessment Research"],
+              },
+              pedagogy: "Comparing pre and post scores helps learners see their growth.",
+              technical: "Available after completing diagnostic and at least one problem.",
+            }}
+            side="top"
+          >
+            <Card className="border-2 border-green-500 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-green-700 dark:text-green-300">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                    <GraduationCap className="w-6 h-6 text-white" />
+                  </div>
+                  Ready for Your Final Assessment!
+                </CardTitle>
+                <CardDescription className="text-green-600 dark:text-green-400">
+                  You've completed {completedProblems.length} problem{completedProblems.length > 1 ? 's' : ''} and discovered {discoveredConcepts} concepts.
+                  Take the post-test to see how much you've learned!
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Diagnostic: {Math.round(legacySession.diagnosticScore)}%</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{completedProblems.length} Problem{completedProblems.length > 1 ? 's' : ''} Completed</span>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => router.push("/post-test")}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  size="lg"
+                >
+                  <GraduationCap className="w-5 h-5 mr-2" />
+                  Take Post-Test Assessment
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
+          </EducationalTooltip>
+        )}
+
+        {/* Already Completed Post-Test */}
+        {legacySession.postTestScore !== null && (
+          <Card className="border-2 border-yellow-500 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-yellow-700 dark:text-yellow-300">
+                <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-white" />
+                </div>
+                Journey Complete!
+              </CardTitle>
+              <CardDescription className="text-yellow-600 dark:text-yellow-400">
+                You've completed your learning journey. Here's your growth summary.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                    {Math.round(legacySession.diagnosticScore || 0)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">Pre-Test</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                    {Math.round(legacySession.postTestScore)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">Post-Test</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-600">
+                    +{Math.round(legacySession.postTestScore - (legacySession.diagnosticScore || 0))}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">Growth</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => router.push("/results")}
+                variant="outline"
+                className="w-full mt-4 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+              >
+                View Detailed Results
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* What's Next */}
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              What's Next?
-            </CardTitle>
+            <EducationalTooltip
+              definition={ethicalTooltipDefinitions.whats_next_section}
+              side="right"
+            >
+              <CardTitle className="flex items-center gap-2 cursor-help">
+                <BookOpen className="w-5 h-5" />
+                What's Next?
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+              </CardTitle>
+            </EducationalTooltip>
           </CardHeader>
           <CardContent className="space-y-4">
             {undiscoveredConcepts.length > 0 && (
@@ -277,35 +473,72 @@ export default function JourneySummaryPage() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col sm:flex-row gap-4">
-            <Button
-              onClick={() => router.push("/problems")}
-              className="flex-1"
-              size="lg"
+            <EducationalTooltip
+              definition={{
+                id: "explore_more_problems",
+                component: "JourneySummaryPage",
+                content: "Continue your learning journey by investigating more ethical dilemmas.",
+                ethicalDesign: {
+                  principle: "Continued Learning",
+                  rationale: "Easy navigation supports self-directed exploration at your own pace.",
+                  category: "autonomy" as const,
+                },
+                pedagogy: "Multiple entry points and clear navigation support varied learning approaches.",
+              }}
+              side="top"
             >
-              Explore More Problems
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={startNewSession}
-              className="flex-1"
+              <Button
+                onClick={() => router.push("/problems")}
+                className="flex-1"
+                size="lg"
+              >
+                Explore More Problems
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </EducationalTooltip>
+            <EducationalTooltip
+              definition={ethicalTooltipDefinitions.start_fresh_button}
+              side="top"
             >
-              <RefreshCw className="mr-2 w-4 h-4" />
-              Start Fresh
-            </Button>
+              <Button
+                variant="outline"
+                onClick={startNewSession}
+                className="flex-1"
+              >
+                <RefreshCw className="mr-2 w-4 h-4" />
+                Start Fresh
+              </Button>
+            </EducationalTooltip>
           </CardFooter>
         </Card>
 
         {/* Encouragement */}
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">
-            Remember: There are no perfect answers in AI ethics - just thoughtful
-            consideration of different perspectives.
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Keep questioning, keep learning!
-          </p>
-        </div>
+        <EducationalTooltip
+          definition={{
+            id: "journey_encouragement",
+            component: "JourneySummaryPage",
+            content: "AI ethics is about thoughtful consideration, not perfect answers.",
+            ethicalDesign: {
+              principle: "Growth Mindset",
+              rationale: "Encouraging messages reinforce that learning is a journey, not a destination.",
+              category: "engagement" as const,
+              references: ["Carol Dweck - Growth Mindset"],
+            },
+            pedagogy: "Framing ethics as ongoing inquiry rather than right/wrong answers supports deeper thinking.",
+            technical: "Encouragement displays regardless of progress state.",
+          }}
+          side="top"
+        >
+          <div className="text-center py-8 cursor-help">
+            <p className="text-muted-foreground">
+              Remember: There are no perfect answers in AI ethics - just thoughtful
+              consideration of different perspectives.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Keep questioning, keep learning!
+            </p>
+          </div>
+        </EducationalTooltip>
       </div>
     </div>
   );

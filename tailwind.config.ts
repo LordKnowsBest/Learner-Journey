@@ -1,4 +1,4 @@
-import type {Config} from 'tailwindcss';
+import type { Config } from 'tailwindcss';
 
 export default {
   darkMode: ['class'],
@@ -15,6 +15,8 @@ export default {
         code: ['Source Code Pro', 'monospace'],
       },
       colors: {
+        // KAITE Brand Palette
+        // background: Light Purple/White (Light) | Deep Purple/Black (Dark)
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

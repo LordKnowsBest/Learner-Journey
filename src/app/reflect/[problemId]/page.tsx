@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { EducationalTooltip } from "@/components/ui/educational-tooltip";
+import { ethicalTooltipDefinitions } from "@/lib/ethical-design-tooltips";
 import { getProblemById, getConceptById } from "@/lib/data";
 import { useSession } from "@/context/SessionContext";
 import { evaluateReflection } from "@/ai/flows/ai-tutor-assistance";
@@ -18,6 +20,7 @@ import {
   FileText,
   Star,
   AlertCircle,
+  HelpCircle,
 } from "lucide-react";
 import type { ProblemScenario, ReflectionPrompt } from "@/lib/types";
 
@@ -235,25 +238,77 @@ export default function ReflectPage() {
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Time to Reflect</h1>
-            <p className="text-muted-foreground">{problem.title}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">
-              Question {currentPromptIndex + 1} of {totalPrompts}
-            </p>
-            <Progress value={progressPercent} className="w-32 mt-1" />
-          </div>
+          <EducationalTooltip
+            definition={{
+              id: "reflection_header",
+              component: "ReflectPage",
+              content: "Reflection consolidates your learning by connecting concepts to the ethical dilemma you investigated.",
+              ethicalDesign: {
+                principle: "Reflective Practice",
+                rationale: "Structured reflection deepens understanding and promotes metacognition.",
+                category: "engagement" as const,
+                references: ["Kolb's Experiential Learning Cycle"],
+              },
+              pedagogy: "Writing reflections helps integrate new knowledge with existing understanding.",
+              technical: "Responses evaluated by AI for concept application and critical thinking.",
+            }}
+            side="bottom"
+          >
+            <div className="cursor-help">
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                Time to Reflect
+                <HelpCircle className="w-5 h-5 text-muted-foreground" />
+              </h1>
+              <p className="text-muted-foreground">{problem.title}</p>
+            </div>
+          </EducationalTooltip>
+          <EducationalTooltip
+            definition={{
+              id: "reflection_progress",
+              component: "ReflectPage",
+              content: "Your progress through the reflection questions. Complete all to finish the investigation.",
+              ethicalDesign: {
+                principle: "Progress Transparency",
+                rationale: "Clear progress indicators support self-regulation and completion.",
+                category: "engagement" as const,
+              },
+              pedagogy: "Progress tracking motivates completion without pressure.",
+            }}
+            side="left"
+          >
+            <div className="text-right cursor-help">
+              <p className="text-sm text-muted-foreground">
+                Question {currentPromptIndex + 1} of {totalPrompts}
+              </p>
+              <Progress value={progressPercent} className="w-32 mt-1" />
+            </div>
+          </EducationalTooltip>
         </div>
 
         {/* Concepts Reference */}
         <Card className="bg-muted/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" />
-              Concepts You Discovered
-            </CardTitle>
+            <EducationalTooltip
+              definition={{
+                id: "reflection_concepts_reference",
+                component: "ReflectPage",
+                content: "These are the concepts you discovered during investigation. Reference them in your reflection.",
+                ethicalDesign: {
+                  principle: "Knowledge Scaffolding",
+                  rationale: "Showing discovered concepts helps learners connect reflection to what they learned.",
+                  category: "engagement" as const,
+                },
+                pedagogy: "Explicit concept reminders support transfer and application.",
+                technical: "Concepts pulled from session state and problem progress.",
+              }}
+              side="right"
+            >
+              <CardTitle className="text-sm flex items-center gap-2 cursor-help">
+                <Lightbulb className="w-4 h-4" />
+                Concepts You Discovered
+                <HelpCircle className="w-3 h-3 text-muted-foreground" />
+              </CardTitle>
+            </EducationalTooltip>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -272,10 +327,28 @@ export default function ReflectPage() {
         {/* Reflection Prompt */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
-              Reflection Question
-            </CardTitle>
+            <EducationalTooltip
+              definition={{
+                id: "reflection_question",
+                component: "ReflectPage",
+                content: "This question prompts you to apply concepts and think critically about the ethical dilemma.",
+                ethicalDesign: {
+                  principle: "Guided Reflection",
+                  rationale: "Well-crafted questions support meaningful reflection without prescribing answers.",
+                  category: "autonomy" as const,
+                  references: ["Bloom's Taxonomy - Higher-Order Thinking"],
+                },
+                pedagogy: "Open-ended questions encourage analysis and synthesis.",
+                technical: "Questions designed for each problem scenario with rubric alignment.",
+              }}
+              side="right"
+            >
+              <CardTitle className="flex items-center gap-2 cursor-help">
+                <FileText className="w-5 h-5 text-primary" />
+                Reflection Question
+                <HelpCircle className="w-4 h-4 text-muted-foreground" />
+              </CardTitle>
+            </EducationalTooltip>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
@@ -283,24 +356,42 @@ export default function ReflectPage() {
             </div>
 
             {/* Rubric Preview */}
-            <div>
-              <p className="text-sm font-medium mb-2">
-                Your response will be evaluated on:
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {currentPrompt.rubricCriteria.map((criterion) => (
-                  <div
-                    key={criterion.criterion}
-                    className="flex items-center gap-2 text-xs text-muted-foreground"
-                  >
-                    <div className="w-2 h-2 bg-primary rounded-full" />
-                    <span>
-                      {criterion.criterion} ({criterion.weight}%)
-                    </span>
-                  </div>
-                ))}
+            <EducationalTooltip
+              definition={{
+                id: "reflection_rubric",
+                component: "ReflectPage",
+                content: "These criteria show what the AI will evaluate in your response.",
+                ethicalDesign: {
+                  principle: "Transparent Assessment",
+                  rationale: "Clear criteria help learners understand expectations before writing.",
+                  category: "transparency" as const,
+                  references: ["Transparent Assessment Practices"],
+                },
+                pedagogy: "Knowing evaluation criteria supports self-assessment and revision.",
+                technical: "Rubric weights determine final score calculation.",
+              }}
+              side="right"
+            >
+              <div className="cursor-help">
+                <p className="text-sm font-medium mb-2 flex items-center gap-1">
+                  Your response will be evaluated on:
+                  <HelpCircle className="w-3 h-3 text-muted-foreground" />
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {currentPrompt.rubricCriteria.map((criterion) => (
+                    <div
+                      key={criterion.criterion}
+                      className="flex items-center gap-2 text-xs text-muted-foreground"
+                    >
+                      <div className="w-2 h-2 bg-primary rounded-full" />
+                      <span>
+                        {criterion.criterion} ({criterion.weight}%)
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </EducationalTooltip>
 
             {/* Response Area */}
             {!hasFeedback ? (
